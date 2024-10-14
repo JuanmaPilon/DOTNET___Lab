@@ -1,0 +1,44 @@
+﻿@page "/oficinas/details"
+@using Microsoft.EntityFrameworkCore
+@using Lab.Components.Models
+@inject IDbContextFactory<Lab.Data.LabContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Details</PageTitle>
+
+<h1>Details</h1>
+
+<div>
+    <h2>Oficina</h2>
+    <hr />
+    @if (oficina is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+        <dl class="row">
+        </dl>
+        <div>
+            <a href="@($"/oficinas/edit?idoficina={oficina.idOficina}")">Edit</a> |
+            <a href="@($"/oficinas")">Back to List</a>
+        </div>
+    }
+</div>
+
+@code {
+    private Oficina? oficina;
+
+    [SupplyParameterFromQuery]
+    private int idOficina { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        oficina = await context.Oficina.FirstOrDefaultAsync(m => m.idOficina == idOficina);
+
+        if (oficina is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+}

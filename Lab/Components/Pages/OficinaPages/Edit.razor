@@ -1,0 +1,84 @@
+﻿@page "/oficinas/edit"
+@using Microsoft.EntityFrameworkCore
+@using Lab.Components.Models
+@inject IDbContextFactory<Lab.Data.LabContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Edit</PageTitle>
+
+<h1>Edit</h1>
+
+<h2>Oficina</h2>
+<hr />
+@if (Oficina is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-4">
+            <EditForm method="post" Model="Oficina" OnValidSubmit="UpdateOficina" FormName="edit" Enhance>
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <input type="hidden" name="Oficina.idOficina" value="@Oficina.idOficina" />
+                <button type="submit" class="btn btn-primary">Save</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+<div>
+    <a href="/oficinas">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    private int idOficina { get; set; }
+
+    [SupplyParameterFromForm]
+    private Oficina? Oficina { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        Oficina ??= await context.Oficina.FirstOrDefaultAsync(m => m.idOficina == idOficina);
+
+        if (Oficina is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    // To protect from overposting attacks, enable the specific properties you want to bind to.
+    // For more information, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    private async Task UpdateOficina()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Attach(Oficina!).State = EntityState.Modified;
+
+        try
+        {
+            await context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!OficinaExists(Oficina!.idOficina))
+            {
+                NavigationManager.NavigateTo("notfound");
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+        NavigationManager.NavigateTo("/oficinas");
+    }
+
+    private bool OficinaExists(int idoficina)
+    {
+        using var context = DbFactory.CreateDbContext();
+        return context.Oficina.Any(e => e.idOficina == idoficina);
+    }
+}

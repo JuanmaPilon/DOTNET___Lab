@@ -1,0 +1,51 @@
+﻿@page "/oficinas/delete"
+@using Microsoft.EntityFrameworkCore
+@using Lab.Components.Models
+@inject IDbContextFactory<Lab.Data.LabContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Delete</PageTitle>
+
+<h1>Delete</h1>
+
+<p>Are you sure you want to delete this?</p>
+<div>
+    <h2>Oficina</h2>
+    <hr />
+    @if (oficina is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+        <EditForm method="post" Model="oficina" OnValidSubmit="DeleteOficina" FormName="delete" Enhance>
+            <button type="submit" class="btn btn-danger" disabled="@(oficina is null)">Delete</button> |
+            <a href="/oficinas">Back to List</a>
+        </EditForm>
+    }
+</div>
+
+@code {
+    private Oficina? oficina;
+
+    [SupplyParameterFromQuery]
+    private int idOficina { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        oficina = await context.Oficina.FirstOrDefaultAsync(m => m.idOficina == idOficina);
+
+        if (oficina is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    private async Task DeleteOficina()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Oficina.Remove(oficina!);
+        await context.SaveChangesAsync();
+        NavigationManager.NavigateTo("/oficinas");
+    }
+}
