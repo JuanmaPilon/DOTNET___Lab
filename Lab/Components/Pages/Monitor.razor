@@ -1,0 +1,51 @@
+﻿@page "/monitor"
+@using Lab.Components.Models
+@rendermode InteractiveServer
+
+<h3>Monitor de Trámites</h3>
+
+@if (TramitesActivos != null && TramitesActivos.Count > 0)
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Nro Trámite</th>
+                <th>Cédula Cliente</th>
+                <th>Nro Puesto</th>
+                <th>Fecha Inicio</th>
+                <th>Fecha Fin</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var tramite in TramitesActivos)
+            {
+                <tr>
+                    <td>@tramite.NroTramite</td>
+                    <td>@tramite.CedulaCliente</td>
+                    <td>@tramite.NroPuesto</td>
+                    <td>@tramite.FechaInicio.ToShortDateString()</td>
+                    <td>@tramite.FechaFin.ToShortDateString()</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>No hay trámites activos.</p>
+}
+
+@code {
+    private List<Tramite> TramitesActivos { get; set; }
+
+    protected override void OnInitialized()
+    {
+        // Inicializar la lista y agregar algunos trámites por defecto
+        TramitesActivos = new List<Tramite>
+        {
+            new Tramite { NroTramite = 1, CedulaCliente = 12345678, NroPuesto = "1", FechaInicio = DateTime.Now.AddDays(-2), FechaFin = DateTime.Now.AddDays(5) },
+            new Tramite { NroTramite = 2, CedulaCliente = 87654321, NroPuesto = "--", FechaInicio = DateTime.Now.AddDays(-1), FechaFin = DateTime.Now.AddDays(3) },
+            new Tramite { NroTramite = 3, CedulaCliente = 12312312, NroPuesto = "--", FechaInicio = DateTime.Now.AddDays(-5), FechaFin = DateTime.Now.AddDays(0) },
+        };
+    }
+}
