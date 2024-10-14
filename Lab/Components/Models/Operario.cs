@@ -6,6 +6,9 @@
         public int PuestoAsignado { get; set; }
 
         public void AtenderCliente() { }
-
+        public override string GetRole()
+        {
+            return "Operario";
+        }
     }
 }

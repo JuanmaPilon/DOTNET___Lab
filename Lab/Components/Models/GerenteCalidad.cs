@@ -4,5 +4,9 @@
     {
         public void ObtenerEstadisticas() { }
 
+        public override string GetRole()
+        {
+            return "GerenteCalidad";
+        }
     }
 }

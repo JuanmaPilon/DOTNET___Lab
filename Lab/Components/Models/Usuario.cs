@@ -2,8 +2,15 @@
 {
     public class Usuario
     {
-        public string nombre { get; set; } 
-        public string contrasenia { get; set; }
+        public string Username { get; set; }
+        public string Password { get; set; }
 
+        public virtual string GetRole()
+        {
+            return "Usuario";
+        }
     }
 }
+
+
+

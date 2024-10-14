@@ -1,7 +1,70 @@
 ﻿@page "/"
+@inject NavigationManager Navigation
+@using Lab.Components.Models
 
-<PageTitle>Home</PageTitle>
+<h3>Login</h3>
 
-<h1>Hello, world!</h1>
+<div>
+    <label>Username:</label>
+    <input @bind="username" />
 
-Welcome to your new app.
+    <label>Password:</label>
+    <input type="password" @bind="password" />
+
+    <button @onclick="Login">Login</button>
+</div>
+
+@code {
+    private string username;
+    private string password;
+
+    private void Login()
+    {
+        // Aquí deberías implementar la lógica real de autenticación (consultar base de datos o API)
+        Usuario user = AuthenticateUser(username, password);
+
+        if (user != null)
+        {
+            string role = user.GetRole();
+            switch (role)
+            {
+                case "Admin":
+                    Navigation.NavigateTo("/admin");
+                    break;
+                case "Operario":
+                    Navigation.NavigateTo("/operario");
+                    break;
+                case "GerenteCalidad":
+                    Navigation.NavigateTo("/gerente-calidad");
+                    break;
+                default:
+                    Navigation.NavigateTo("/home");
+                    break;
+            }
+        }
+        else
+        {
+            // Manejar el error de login (usuario o contraseña incorrecta)
+        }
+    }
+
+    // Método simulado de autenticación
+    private Usuario AuthenticateUser(string username, string password)
+    {
+        if (username == "admin" && password == "admin123")
+        {
+            return new Administrador { Username = username, Password = password };
+        }
+        else if (username == "operario" && password == "operario123")
+        {
+            return new Operario { Username = username, Password = password };
+        }
+        else if (username == "gerente" && password == "gerente123")
+        {
+            return new GerenteCalidad { Username = username, Password = password };
+        }
+        return null;
+    }
+
+
+}
