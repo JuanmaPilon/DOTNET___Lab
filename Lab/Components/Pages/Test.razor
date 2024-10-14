@@ -1,0 +1,12 @@
+﻿@page "/test"
+@rendermode InteractiveServer
+<h3>Test Page</h3>
+
+<button @onclick="TestButton">Test Button</button>
+
+@code {
+    private void TestButton()
+    {
+        Console.WriteLine("Test button clicked!");
+    }
+}

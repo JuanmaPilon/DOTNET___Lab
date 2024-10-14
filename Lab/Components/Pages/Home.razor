@@ -1,5 +1,8 @@
 ﻿@page "/"
+@attribute [StreamRendering]
 @inject NavigationManager Navigation
+
+@rendermode InteractiveServer
 @using Lab.Components.Models
 
 <h3>Login</h3>
@@ -7,7 +10,7 @@
 <div>
     <label>Username:</label>
     <input @bind="username" />
-
+    <br>
     <label>Password:</label>
     <input type="password" @bind="password" />
 
@@ -15,36 +18,41 @@
 </div>
 
 @code {
-    private string username;
-    private string password;
+    private string? username;
+    private string? password;
 
     private void Login()
     {
-        // Aquí deberías implementar la lógica real de autenticación (consultar base de datos o API)
+        Console.WriteLine("Login button clicked!");
         Usuario user = AuthenticateUser(username, password);
 
         if (user != null)
         {
+            Console.WriteLine($"User authenticated: {user.Username}, Role: {user.GetRole()}");
+
             string role = user.GetRole();
             switch (role)
             {
                 case "Admin":
+                    Console.WriteLine("Admin authenticated");
                     Navigation.NavigateTo("/admin");
                     break;
                 case "Operario":
-                    Navigation.NavigateTo("/operario");
+                    Console.WriteLine("Operario authenticated");
+                    Navigation.NavigateTo("/operarios");
                     break;
                 case "GerenteCalidad":
+                    Console.WriteLine("GerenteCalidad authenticated");
                     Navigation.NavigateTo("/gerente-calidad");
                     break;
                 default:
-                    Navigation.NavigateTo("/home");
+                    Navigation.NavigateTo("/");
                     break;
             }
         }
         else
         {
-            // Manejar el error de login (usuario o contraseña incorrecta)
+            Console.WriteLine("Authentication failed. User not found.");
         }
     }
 
@@ -53,16 +61,21 @@
     {
         if (username == "admin" && password == "admin123")
         {
+            Console.WriteLine("Admin authenticated");
             return new Administrador { Username = username, Password = password };
         }
         else if (username == "operario" && password == "operario123")
         {
+            Console.WriteLine("Operario authenticated");
             return new Operario { Username = username, Password = password };
         }
         else if (username == "gerente" && password == "gerente123")
         {
+            Console.WriteLine("GerenteCalidad authenticated");
             return new GerenteCalidad { Username = username, Password = password };
         }
+
+        Console.WriteLine("Authentication failed");
         return null;
     }
 
