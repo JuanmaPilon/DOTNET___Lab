@@ -1,0 +1,104 @@
+﻿@page "/tramites/edit"
+@using Microsoft.EntityFrameworkCore
+@using Lab.Components.Models
+@inject IDbContextFactory<Lab.Data.LabContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Edit</PageTitle>
+
+<h1>Edit</h1>
+
+<h2>Tramite</h2>
+<hr />
+@if (Tramite is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-4">
+            <EditForm method="post" Model="Tramite" OnValidSubmit="UpdateTramite" FormName="edit" Enhance>
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <input type="hidden" name="Tramite.NroTramite" value="@Tramite.NroTramite" />
+                <div class="mb-3">
+                    <label for="cedulacliente" class="form-label">CedulaCliente:</label>
+                    <InputNumber id="cedulacliente" @bind-Value="Tramite.CedulaCliente" class="form-control" />
+                    <ValidationMessage For="() => Tramite.CedulaCliente" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="nropuesto" class="form-label">NroPuesto:</label>
+                    <InputText id="nropuesto" @bind-Value="Tramite.NroPuesto" class="form-control" />
+                    <ValidationMessage For="() => Tramite.NroPuesto" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="fechainicio" class="form-label">FechaInicio:</label>
+                    <InputDate id="fechainicio" @bind-Value="Tramite.FechaInicio" class="form-control" />
+                    <ValidationMessage For="() => Tramite.FechaInicio" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="fechafin" class="form-label">FechaFin:</label>
+                    <InputDate id="fechafin" @bind-Value="Tramite.FechaFin" class="form-control" />
+                    <ValidationMessage For="() => Tramite.FechaFin" class="text-danger" />
+                </div>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+<div>
+    <a href="/tramites">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    private int NroTramite { get; set; }
+
+    [SupplyParameterFromForm]
+    private Tramite? Tramite { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        Tramite ??= await context.Tramite.FirstOrDefaultAsync(m => m.NroTramite == NroTramite);
+
+        if (Tramite is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    // To protect from overposting attacks, enable the specific properties you want to bind to.
+    // For more information, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    private async Task UpdateTramite()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Attach(Tramite!).State = EntityState.Modified;
+
+        try
+        {
+            await context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!TramiteExists(Tramite!.NroTramite))
+            {
+                NavigationManager.NavigateTo("notfound");
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+        NavigationManager.NavigateTo("/tramites");
+    }
+
+    private bool TramiteExists(int nrotramite)
+    {
+        using var context = DbFactory.CreateDbContext();
+        return context.Tramite.Any(e => e.NroTramite == nrotramite);
+    }
+}

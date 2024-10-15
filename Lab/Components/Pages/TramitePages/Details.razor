@@ -1,0 +1,52 @@
+﻿@page "/tramites/details"
+@using Microsoft.EntityFrameworkCore
+@using Lab.Components.Models
+@inject IDbContextFactory<Lab.Data.LabContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Details</PageTitle>
+
+<h1>Details</h1>
+
+<div>
+    <h2>Tramite</h2>
+    <hr />
+    @if (tramite is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+        <dl class="row">
+            <dt class="col-sm-2">CedulaCliente</dt>
+            <dd class="col-sm-10">@tramite.CedulaCliente</dd>
+            <dt class="col-sm-2">NroPuesto</dt>
+            <dd class="col-sm-10">@tramite.NroPuesto</dd>
+            <dt class="col-sm-2">FechaInicio</dt>
+            <dd class="col-sm-10">@tramite.FechaInicio</dd>
+            <dt class="col-sm-2">FechaFin</dt>
+            <dd class="col-sm-10">@tramite.FechaFin</dd>
+        </dl>
+        <div>
+            <a href="@($"/tramites/edit?nrotramite={tramite.NroTramite}")">Edit</a> |
+            <a href="@($"/tramites")">Back to List</a>
+        </div>
+    }
+</div>
+
+@code {
+    private Tramite? tramite;
+
+    [SupplyParameterFromQuery]
+    private int NroTramite { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        tramite = await context.Tramite.FirstOrDefaultAsync(m => m.NroTramite == NroTramite);
+
+        if (tramite is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+}

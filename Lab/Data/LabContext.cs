@@ -15,5 +15,6 @@ namespace Lab.Data
         }
 
         public DbSet<Lab.Components.Models.Oficina> Oficina { get; set; } = default!;
+        public DbSet<Lab.Components.Models.Tramite> Tramite { get; set; } = default!;
     }
 }

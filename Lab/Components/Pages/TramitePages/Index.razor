@@ -1,0 +1,39 @@
+﻿@page "/tramites"
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using Lab.Components.Models
+@using Lab.Data
+@implements IAsyncDisposable
+@inject IDbContextFactory<Lab.Data.LabContext> DbFactory
+
+<PageTitle>Index</PageTitle>
+
+<h1>Index</h1>
+
+<p>
+    <a href="tramites/create">Create New</a>
+</p>
+
+<QuickGrid Class="table" Items="context.Tramite">
+    <PropertyColumn Property="tramite => tramite.CedulaCliente" />
+    <PropertyColumn Property="tramite => tramite.NroPuesto" />
+    <PropertyColumn Property="tramite => tramite.FechaInicio" />
+    <PropertyColumn Property="tramite => tramite.FechaFin" />
+
+    <TemplateColumn Context="tramite">
+        <a href="@($"tramites/edit?nrotramite={tramite.NroTramite}")">Edit</a> |
+        <a href="@($"tramites/details?nrotramite={tramite.NroTramite}")">Details</a> |
+        <a href="@($"tramites/delete?nrotramite={tramite.NroTramite}")">Delete</a>
+    </TemplateColumn>
+</QuickGrid>
+
+@code {
+    private LabContext context = default!;
+
+    protected override void OnInitialized()
+    {
+        context = DbFactory.CreateDbContext();
+    }
+
+    public async ValueTask DisposeAsync() => await context.DisposeAsync();
+}
