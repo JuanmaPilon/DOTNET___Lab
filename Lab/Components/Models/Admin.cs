@@ -9,8 +9,9 @@
 
         public override string GetRole()
         {
-            return "Admin";
+            return "Administrador";
         }
+       
 
     }
    

@@ -1,7 +1,7 @@
 ﻿using Lab.Components;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Lab.Data;
+using Lab.Components.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContextFactory<LabContext>(options =>
@@ -14,6 +14,9 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+// Agregar el servicio de ProtectedBrowserStorage
+builder.Services.AddSingleton<UserSessionService>(); // Registrar el servicio de sesión
 
 var app = builder.Build();
 
@@ -33,5 +36,7 @@ app.UseAntiforgery();
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
+
+
 
 app.Run();

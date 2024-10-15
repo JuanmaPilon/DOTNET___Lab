@@ -1,4 +1,21 @@
 ﻿@page "/operarios"
+@using Lab.Components.Models
+@inject UserSessionService UserSessionService // Inyección del servicio de sesión
 
-<h3>Bienvenido, Operario</h3>
+<h3>Página de Operario</h3>
 
+<p>Username: @username</p>
+<p>Role: @role</p>
+
+@code {
+    private string username;
+    private string role;
+
+    protected override void OnInitialized()
+    {
+        // Obtener datos de sesión del usuario
+        var session = UserSessionService.GetUserSession("operario"); // Cambia esto según el nombre de usuario que quieras probar
+        username = session.username ?? "No user";
+        role = session.role ?? "No role";
+    }
+}

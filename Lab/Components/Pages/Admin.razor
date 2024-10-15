@@ -1,5 +1,19 @@
 ﻿@page "/admin"
+@inject UserSessionService UserSessionService // Inyección del servicio de sesión
 
-<h3>Bienvenido, Admin</h3>
+<h3>Admin Page</h3>
 
-<p>Esta es la página de administración.</p>
+<p>Username: @username</p>
+<p>Role: @role</p>
+
+@code {
+    private string username;
+    private string role;
+
+    protected override void OnInitialized()
+    {
+        var session = UserSessionService.GetUserSession("admin"); // Cambia esto según el nombre de usuario que quieras probar
+        username = session.username ?? "No user";
+        role = session.role ?? "No role";
+    }
+}
