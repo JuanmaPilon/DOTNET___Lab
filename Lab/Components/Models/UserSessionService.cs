@@ -1,19 +1,19 @@
-﻿using System.Collections.Generic;
-
-public class UserSessionService
+﻿public class UserSessionService
 {
     private readonly Dictionary<string, string> _userSessions = new Dictionary<string, string>();
+    private string _currentUser; // Variable para almacenar el usuario actual
 
     public void SetUserSession(string username, string role)
     {
         _userSessions[username] = role;
+        _currentUser = username; // Guardar el usuario actual
     }
 
-    public (string username, string role) GetUserSession(string username)
+    public (string username, string role) GetCurrentSession()
     {
-        if (_userSessions.TryGetValue(username, out string role))
+        if (_currentUser != null && _userSessions.TryGetValue(_currentUser, out string role))
         {
-            return (username, role);
+            return (_currentUser, role);
         }
         return (null, null);
     }
@@ -21,5 +21,9 @@ public class UserSessionService
     public void RemoveUserSession(string username)
     {
         _userSessions.Remove(username);
+        if (_currentUser == username)
+        {
+            _currentUser = null; // Limpiar el usuario actual si se elimina
+        }
     }
 }

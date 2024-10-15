@@ -13,8 +13,9 @@
 
     protected override void OnInitialized()
     {
-        // Obtener datos de sesión del usuario
-        var session = UserSessionService.GetUserSession("operario"); // Cambia esto según el nombre de usuario que quieras probar
+        // Obtener el nombre de usuario de la sesión actual
+        var session = UserSessionService.GetCurrentSession(); // Sin necesidad de pasar el nombre de usuario
+
         username = session.username ?? "No user";
         role = session.role ?? "No role";
     }

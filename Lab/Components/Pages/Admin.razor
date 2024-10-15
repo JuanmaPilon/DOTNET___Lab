@@ -1,4 +1,5 @@
 ﻿@page "/admin"
+@using Lab.Components.Models
 @inject UserSessionService UserSessionService // Inyección del servicio de sesión
 
 <h3>Admin Page</h3>
@@ -12,7 +13,9 @@
 
     protected override void OnInitialized()
     {
-        var session = UserSessionService.GetUserSession("admin"); // Cambia esto según el nombre de usuario que quieras probar
+        // Obtener el nombre de usuario de la sesión actual
+        var session = UserSessionService.GetCurrentSession(); // Sin necesidad de pasar el nombre de usuario
+
         username = session.username ?? "No user";
         role = session.role ?? "No role";
     }
