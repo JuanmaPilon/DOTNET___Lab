@@ -1,0 +1,40 @@
+﻿@inherits LayoutComponentBase
+@inject UserSessionService UserSessionService
+@inject NavigationManager Navigation
+
+@rendermode InteractiveServer
+
+<header class="top-row px-4" style="display: flex; justify-content: flex-end; align-items: center;">
+    <a href="https://learn.microsoft.com/aspnet/core/" target="_blank" style="margin-left: 20px;">About</a>
+    
+    @if (IsUserLoggedIn())
+    {
+        <button @onclick="Logout" style="margin-left: 10px;">Logout</button>
+    }
+    else
+    {
+        <a href="/login" style="margin-left: 10px;">Login</a>
+    }
+</header>
+
+@code {
+    private void Logout()
+    {
+
+        Console.WriteLine("Logout button clicked!");
+        UserSessionService.RemoveUserSession(); // Sin argumentos
+        Console.WriteLine("User session removed.");
+        ReloadPage();
+        Navigation.NavigateTo("/"); // Redirige a la página de inicio
+    }
+
+    private bool IsUserLoggedIn()
+    {
+        var currentSession = UserSessionService.GetCurrentSession();
+        return !string.IsNullOrEmpty(currentSession.username);
+    }
+    public void ReloadPage()
+    {
+        Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
+    }
+}

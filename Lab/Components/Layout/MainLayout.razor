@@ -1,4 +1,8 @@
 ﻿@inherits LayoutComponentBase
+@inject UserSessionService UserSessionService
+@inject NavigationManager Navigation
+@using Lab.Components.Pages
+@using Lab.Components  
 
 <div class="page">
     <div class="sidebar">
@@ -6,14 +10,16 @@
     </div>
 
     <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
-        </div>
+        <Header /> <!-- Incluye el componente de encabezado -->
 
         <article class="content px-4">
-            @Body
+            @Body 
         </article>
     </main>
+
+    <footer>
+        <p>© 2024 .NET</p>
+    </footer>
 </div>
 
 <div id="blazor-error-ui">

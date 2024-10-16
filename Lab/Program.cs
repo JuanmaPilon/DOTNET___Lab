@@ -1,7 +1,6 @@
 ﻿using Lab.Components;
 using Microsoft.EntityFrameworkCore;
 using Lab.Data;
-using Lab.Components.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContextFactory<LabContext>(options =>

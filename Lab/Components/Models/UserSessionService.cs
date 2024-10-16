@@ -1,29 +1,25 @@
 ﻿public class UserSessionService
 {
-    private readonly Dictionary<string, string> _userSessions = new Dictionary<string, string>();
-    private string _currentUser; // Variable para almacenar el usuario actual
+    private string _currentUsername;
+    private string _currentRole;
 
     public void SetUserSession(string username, string role)
     {
-        _userSessions[username] = role;
-        _currentUser = username; // Guardar el usuario actual
+        _currentUsername = username;
+        _currentRole = role;
+
     }
 
     public (string username, string role) GetCurrentSession()
     {
-        if (_currentUser != null && _userSessions.TryGetValue(_currentUser, out string role))
-        {
-            return (_currentUser, role);
-        }
-        return (null, null);
+        return (_currentUsername, _currentRole);
     }
 
-    public void RemoveUserSession(string username)
+    public void RemoveUserSession() // Sin parámetros
     {
-        _userSessions.Remove(username);
-        if (_currentUser == username)
-        {
-            _currentUser = null; // Limpiar el usuario actual si se elimina
-        }
+        _currentUsername = null;
+        _currentRole = null;
     }
+
+    public bool IsUserLoggedIn() => !string.IsNullOrEmpty(_currentUsername);
 }

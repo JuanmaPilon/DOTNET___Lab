@@ -11,10 +11,10 @@
 <div>
     <label>Username:</label>
     <input @bind="username" />
-    <br>
+    <br />
     <label>Password:</label>
     <input type="password" @bind="password" />
-
+    <br />
     <button @onclick="Login">Login</button>
 </div>
 
@@ -33,34 +33,38 @@
 
             // Guardar datos en la sesión
             UserSessionService.SetUserSession(user.Username, user.GetRole());
+            StateHasChanged(); // Fuerza el re-renderizado del componente
+
 
             // Navegar basado en el rol
             string role = user.GetRole();
             switch (role)
             {
-                case "Administrador": // Cambia "Admin" a "Administrador"
-                    Console.WriteLine("Admin authenticated");
-                    Navigation.NavigateTo("/admin");
+                case "Administrador":
+                    Console.WriteLine("Admin authenticated");                    
+                    Navigation.NavigateTo("/admin", forceLoad: true);
+
                     break;
                 case "Operario":
                     Console.WriteLine("Operario authenticated");
-                    Navigation.NavigateTo("/operarios");
+                    Navigation.NavigateTo("/operarios", forceLoad: true);
                     break;
                 case "GerenteCalidad":
                     Console.WriteLine("GerenteCalidad authenticated");
-                    Navigation.NavigateTo("/gerente-calidad");
+                    Navigation.NavigateTo("/gerente-calidad", forceLoad: true);
                     break;
                 default:
-                    Navigation.NavigateTo("/");
+                    Console.WriteLine("Redirigiendo a la página de inicio.");
+                    Navigation.NavigateTo("/"); 
                     break;
             }
         }
         else
         {
             Console.WriteLine("Authentication failed. User not found.");
+           
         }
     }
-
     // Método simulado de autenticación
     private Usuario AuthenticateUser(string username, string password)
     {
@@ -83,6 +87,4 @@
         Console.WriteLine("Authentication failed");
         return null;
     }
-
-
 }
