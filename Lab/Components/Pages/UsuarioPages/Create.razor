@@ -1,0 +1,49 @@
+﻿@page "/usuarios/create"
+@using Microsoft.EntityFrameworkCore
+@using Lab.Components.Models
+@inject IDbContextFactory<Lab.Data.LabContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Create</PageTitle>
+
+<h1>Create</h1>
+
+<h2>Usuario</h2>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <EditForm method="post" Model="Usuario" OnValidSubmit="AddUsuario" FormName="create" Enhance>
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" />
+            <div class="mb-3">
+                <label for="username" class="form-label">Username:</label>
+                <InputText id="username" @bind-Value="Usuario.Username" class="form-control" />
+                <ValidationMessage For="() => Usuario.Username" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">Password:</label> 
+                <InputText id="password" @bind-Value="Usuario.Password" class="form-control" /> 
+                <ValidationMessage For="() => Usuario.Password" class="text-danger" /> 
+            </div>        
+            <button type="submit" class="btn btn-primary">Create</button>
+        </EditForm>
+    </div>
+</div>
+
+<div>
+    <a href="/usuarios">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromForm]
+    private Usuario Usuario { get; set; } = new();
+
+    // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    private async Task AddUsuario()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Usuario.Add(Usuario);
+        await context.SaveChangesAsync();
+        NavigationManager.NavigateTo("/usuarios");
+    }
+}

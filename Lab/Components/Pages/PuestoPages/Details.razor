@@ -1,0 +1,50 @@
+﻿@page "/puestos/details"
+@using Microsoft.EntityFrameworkCore
+@using Lab.Components.Models
+@inject IDbContextFactory<Lab.Data.LabContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Details</PageTitle>
+
+<h1>Details</h1>
+
+<div>
+    <h2>Puesto</h2>
+    <hr />
+    @if (puesto is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+        <dl class="row">
+            <dt class="col-sm-2">Estado</dt>
+            <dd class="col-sm-10">@puesto.Estado</dd>
+            <dt class="col-sm-2">TramiteActual</dt>
+            <dd class="col-sm-10">@puesto.TramiteActual</dd>
+            <dt class="col-sm-2">idOficina</dt>
+            <dd class="col-sm-10">@puesto.idOficina</dd>
+        </dl>
+        <div>
+            <a href="@($"/puestos/edit?nropuesto={puesto.NroPuesto}")">Edit</a> |
+            <a href="@($"/puestos")">Back to List</a>
+        </div>
+    }
+</div>
+
+@code {
+    private Puesto? puesto;
+
+    [SupplyParameterFromQuery]
+    private int NroPuesto { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        puesto = await context.Puesto.FirstOrDefaultAsync(m => m.NroPuesto == NroPuesto);
+
+        if (puesto is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+}

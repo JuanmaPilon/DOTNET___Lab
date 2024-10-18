@@ -1,0 +1,99 @@
+﻿@page "/puestos/edit"
+@using Microsoft.EntityFrameworkCore
+@using Lab.Components.Models
+@inject IDbContextFactory<Lab.Data.LabContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Edit</PageTitle>
+
+<h1>Edit</h1>
+
+<h2>Puesto</h2>
+<hr />
+@if (Puesto is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-4">
+            <EditForm method="post" Model="Puesto" OnValidSubmit="UpdatePuesto" FormName="edit" Enhance>
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <input type="hidden" name="Puesto.NroPuesto" value="@Puesto.NroPuesto" />
+                <div class="mb-3">
+                    <label for="estado" class="form-label">Estado:</label>
+                    <InputCheckbox id="estado" @bind-Value="Puesto.Estado" class="form-check-input" />
+                    <ValidationMessage For="() => Puesto.Estado" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="tramiteactual" class="form-label">TramiteActual:</label>
+                    <InputNumber id="tramiteactual" @bind-Value="Puesto.TramiteActual" class="form-control" />
+                    <ValidationMessage For="() => Puesto.TramiteActual" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="idoficina" class="form-label">idOficina:</label>
+                    <InputNumber id="idoficina" @bind-Value="Puesto.idOficina" class="form-control" />
+                    <ValidationMessage For="() => Puesto.idOficina" class="text-danger" />
+                </div>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+<div>
+    <a href="/puestos">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    private int NroPuesto { get; set; }
+
+    [SupplyParameterFromForm]
+    private Puesto? Puesto { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        Puesto ??= await context.Puesto.FirstOrDefaultAsync(m => m.NroPuesto == NroPuesto);
+
+        if (Puesto is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    // To protect from overposting attacks, enable the specific properties you want to bind to.
+    // For more information, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    private async Task UpdatePuesto()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Attach(Puesto!).State = EntityState.Modified;
+
+        try
+        {
+            await context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!PuestoExists(Puesto!.NroPuesto))
+            {
+                NavigationManager.NavigateTo("notfound");
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+        NavigationManager.NavigateTo("/puestos");
+    }
+
+    private bool PuestoExists(int nropuesto)
+    {
+        using var context = DbFactory.CreateDbContext();
+        return context.Puesto.Any(e => e.NroPuesto == nropuesto);
+    }
+}

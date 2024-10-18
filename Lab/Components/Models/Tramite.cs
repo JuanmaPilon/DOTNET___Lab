@@ -8,6 +8,7 @@ namespace Lab.Components.Models
     {
         [Key]
         public int NroTramite { get; set; }
+        [Required]
         public int CedulaCliente { get; set; }
         [ForeignKey("Puesto")]
         public String NroPuesto { get; set; }

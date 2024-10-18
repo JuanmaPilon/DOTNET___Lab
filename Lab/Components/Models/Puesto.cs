@@ -1,5 +1,5 @@
-﻿using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Lab.Components.Models
 {
@@ -7,12 +7,18 @@ namespace Lab.Components.Models
     {
         [Key]
         public int NroPuesto { get; set; }
+
         public bool Estado { get; set; }
         public int TramiteActual { get; set; }
 
+        // Clave foránea a Oficina
+        [ForeignKey("Oficina")]
+        public int idOficina { get; set; }
 
-        public void TerminarTramite (int NroTramite) { }
+        // Propiedad de navegación
+        public Oficina Oficina { get; set; }
+
+        public void TerminarTramite(int NroTramite) { }
         public void SiguienteTramite(int NroTramite) { }
-
     }
 }

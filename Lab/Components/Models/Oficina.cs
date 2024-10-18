@@ -7,7 +7,7 @@ namespace Lab.Components.Models
     {
         [Key]
         public int idOficina { get; set; }
-        public List<Puesto> ?ListaPuestos { get; set; }
+        public List<Puesto>? ListaPuestos { get; set; } = new List<Puesto>();
 
 
         public void ObtenerEstadisticas() { }
