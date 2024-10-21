@@ -16,25 +16,10 @@
             <DataAnnotationsValidator />
             <ValidationSummary class="text-danger" />
             <div class="mb-3">
-                <label for="cedulacliente" class="form-label">CedulaCliente:</label> 
-                <InputNumber id="cedulacliente" @bind-Value="Tramite.CedulaCliente" class="form-control" /> 
-                <ValidationMessage For="() => Tramite.CedulaCliente" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="nropuesto" class="form-label">NroPuesto:</label> 
-                <InputText id="nropuesto" @bind-Value="Tramite.NroPuesto" class="form-control" /> 
-                <ValidationMessage For="() => Tramite.NroPuesto" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="fechainicio" class="form-label">FechaInicio:</label> 
-                <InputDate id="fechainicio" @bind-Value="Tramite.FechaInicio" class="form-control" /> 
-                <ValidationMessage For="() => Tramite.FechaInicio" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="fechafin" class="form-label">FechaFin:</label> 
-                <InputDate id="fechafin" @bind-Value="Tramite.FechaFin" class="form-control" /> 
-                <ValidationMessage For="() => Tramite.FechaFin" class="text-danger" /> 
-            </div>        
+                <label for="cedulacliente" class="form-label">CedulaCliente:</label>
+                <InputNumber id="cedulacliente" @bind-Value="Tramite.CedulaCliente" class="form-control" />
+                <ValidationMessage For="() => Tramite.CedulaCliente" class="text-danger" />
+            </div>
             <button type="submit" class="btn btn-primary">Create</button>
         </EditForm>
     </div>
@@ -48,9 +33,13 @@
     [SupplyParameterFromForm]
     private Tramite Tramite { get; set; } = new();
 
-    // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
     private async Task AddTramite()
     {
+        // Asignar valores predeterminados en el backend
+        Tramite.NroPuesto = "--";             // Valor predeterminado
+        Tramite.FechaInicio = DateTime.Now;   // Fecha actual
+        Tramite.FechaFin = null;              // No se establece fecha de fin
+
         using var context = DbFactory.CreateDbContext();
         context.Tramite.Add(Tramite);
         await context.SaveChangesAsync();

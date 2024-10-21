@@ -13,6 +13,6 @@ namespace Lab.Components.Models
         [ForeignKey("Puesto")]
         public String NroPuesto { get; set; }
         public DateTime FechaInicio { get; set; }
-        public DateTime FechaFin { get; set; }
+        public DateTime? FechaFin { get; set; }
     }
 }
