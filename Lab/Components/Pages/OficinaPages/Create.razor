@@ -3,6 +3,7 @@
 @using Lab.Components.Models
 @inject IDbContextFactory<Lab.Data.LabContext> DbFactory
 @inject NavigationManager NavigationManager
+@using System.Text.Json
 
 <PageTitle>Create</PageTitle>
 
@@ -12,26 +13,74 @@
 <hr />
 <div class="row">
     <div class="col-md-4">
-        <EditForm method="post" Model="Oficina" OnValidSubmit="AddOficina" FormName="create" Enhance>
+        <EditForm Model="@Oficina" OnValidSubmit="@AddOficina" method="post" FormName="createOficinaForm">
             <DataAnnotationsValidator />
-            <ValidationSummary class="text-danger" />
-            <button type="submit" class="btn btn-primary">Create</button>
+            <ValidationSummary />
+
+            <div>
+                <label>ID Oficina:</label>
+                <InputNumber @bind-Value="Oficina.idOficina" class="form-control" />
+                <ValidationMessage For="@(() => Oficina.idOficina)" />
+            </div>
+
+            <div>
+                <label>Puestos Existentes:</label>
+                <select @bind="selectedPuestoId">
+                    <option value="">Seleccione un puesto</option>
+                    @if (puestosExistentes != null && puestosExistentes.Count > 0)
+                    {
+                        @foreach (var puesto in puestosExistentes)
+                        {
+                            <option value="@puesto.NroPuesto">@puesto.NroPuesto</option>
+                        }
+                    }
+                    else
+                    {
+                        <option value="" disabled>No hay puestos disponibles</option>
+                    }
+                </select>
+            </div>
+
+            <button type="submit">Agregar Oficina</button>
         </EditForm>
     </div>
 </div>
 
-<div>
-    <a href="/oficinas">Back to List</a>
-</div>
-
 @code {
-    [SupplyParameterFromForm]
-    private Oficina Oficina { get; set; } = new();
+    private Oficina Oficina { get; set; } = new Oficina();
+    private int? selectedPuestoId { get; set; }
+    private List<Puesto> puestosExistentes;
 
-    // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
-    private async Task AddOficina()
+    protected override async Task OnInitializedAsync()
     {
         using var context = DbFactory.CreateDbContext();
+        puestosExistentes = await context.Puesto.ToListAsync();
+        Console.WriteLine($"Oficina inicializada: {JsonSerializer.Serialize(Oficina)}");
+    }
+
+    private async Task AddOficina()
+    {
+        Console.WriteLine("AddOficina llamado");
+        Console.WriteLine($"ID Oficina antes de validación: {Oficina.idOficina}");
+        Console.WriteLine($"Oficina detalles: {JsonSerializer.Serialize(Oficina)}");
+
+        if (Oficina.idOficina <= 0)
+        {
+            throw new InvalidOperationException("El ID de la oficina debe ser un valor positivo.");
+        }
+
+        using var context = DbFactory.CreateDbContext();
+
+        // Asigna puesto seleccionado si hay uno
+        if (selectedPuestoId.HasValue)
+        {
+            var puesto = await context.Puesto.FindAsync(selectedPuestoId.Value);
+            if (puesto != null)
+            {
+                Oficina.ListaPuestos.Add(puesto);
+            }
+        }
+
         context.Oficina.Add(Oficina);
         await context.SaveChangesAsync();
         NavigationManager.NavigateTo("/oficinas");
