@@ -25,6 +25,8 @@ namespace Lab.Data
                 .HasMany(o => o.ListaPuestos)
                 .WithOne(p => p.Oficina)
                 .HasForeignKey(p => p.idOficina);
+
+            base.OnModelCreating(modelBuilder);
         }
     }
 }

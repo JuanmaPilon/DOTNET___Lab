@@ -4,32 +4,34 @@
 @inject IDbContextFactory<Lab.Data.LabContext> DbFactory
 @inject NavigationManager NavigationManager
 
-<PageTitle>Create Oficina</PageTitle>
+<PageTitle>Create</PageTitle>
 
-<h1>Crear Oficina</h1>
+<h1>Create Oficina</h1>
 <hr />
 
 <div class="row">
     <div class="col-md-4">
-        <button class="btn btn-primary" @onclick="AddOficina">Crear Oficina</button>
+        <EditForm method="post" Model="@Oficina" OnValidSubmit="AddOficina" FormName="create">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" />
+
+            <button type="submit" class="btn btn-primary">Create</button>
+        </EditForm>
     </div>
 </div>
 
+<div>
+    <a href="/oficinas">Back to List</a>
+</div>
+
 @code {
+    private Oficina Oficina { get; set; } = new();
+
     private async Task AddOficina()
     {
         using var context = DbFactory.CreateDbContext();
-
-        var nuevaOficina = new Oficina
-            {
-                // No es necesario asignar el ID si la base de datos lo maneja automáticamente
-                ListaPuestos = new List<Puesto>() // Lista vacía de puestos
-            };
-
-        context.Oficina.Add(nuevaOficina);
+        context.Oficina.Add(Oficina);
         await context.SaveChangesAsync();
-
-        // Redirigir a la lista de oficinas después de crear la nueva oficina
         NavigationManager.NavigateTo("/oficinas");
     }
 }
