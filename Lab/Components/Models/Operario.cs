@@ -8,8 +8,8 @@ namespace Lab.Components.Models
     {
         [Required]
         public int NumeroOperario { get; set; }
-        [ForeignKey("Puesto")]
-        public int? PuestoAsignadoId { get; set; }
+        [ForeignKey("PuestoAsignado")]
+        public int PuestoAsignadoId { get; set; }
 
         public void AtenderCliente() { }
         public override string GetRole()

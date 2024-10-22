@@ -34,12 +34,12 @@
                 <label for="puestoasignadoid" class="form-label">PuestoAsignadoId:</label> 
                 <InputNumber id="puestoasignadoid" @bind-Value="Operario.PuestoAsignadoId" class="form-control" /> 
                 <ValidationMessage For="() => Operario.PuestoAsignadoId" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="password" class="form-label">Password:</label> 
-                <InputText id="password" @bind-Value="Operario.Password" class="form-control" /> 
-                <ValidationMessage For="() => Operario.Password" class="text-danger" /> 
-            </div>        
+            </div>
+
+            @if (ErrorMessage != null)
+            {
+                <div class="alert alert-danger">@ErrorMessage</div>
+            }
             <button type="submit" class="btn btn-primary">Create</button>
         </EditForm>
     </div>
@@ -53,10 +53,23 @@
     [SupplyParameterFromForm]
     private Operario Operario { get; set; } = new();
 
+    private string? ErrorMessage { get; set; }
+
     // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
     private async Task AddOperario()
     {
         using var context = DbFactory.CreateDbContext();
+        var puestoExistente = await context.Puesto
+        .AsNoTracking() // Evita el seguimiento de cambios si solo estás verificando
+        .FirstOrDefaultAsync(p => p.NroPuesto == Operario.PuestoAsignadoId);
+
+        if (puestoExistente == null)
+        {
+            // Si el puesto no existe, muestra un mensaje de error
+            ErrorMessage = "El puesto asignado no existe. Por favor, ingrese un puesto válido.";
+            return;
+        }
+
         context.Operario.Add(Operario);
         await context.SaveChangesAsync();
         NavigationManager.NavigateTo("/operarios");
