@@ -4,6 +4,7 @@ using Lab.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Lab.Migrations
 {
     [DbContext(typeof(LabContext))]
-    partial class LabContextModelSnapshot : ModelSnapshot
+    [Migration("20241022180910_mssql.local_migration_911")]
+    partial class mssqllocal_migration_911
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -118,10 +121,7 @@ namespace Lab.Migrations
                     b.Property<int?>("PuestoAsignadoId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("PuestoNroPuesto")
-                        .HasColumnType("int");
-
-                    b.HasIndex("PuestoNroPuesto");
+                    b.HasIndex("PuestoAsignadoId");
 
                     b.HasDiscriminator().HasValue("Operario");
                 });
@@ -139,9 +139,12 @@ namespace Lab.Migrations
 
             modelBuilder.Entity("Lab.Components.Models.Operario", b =>
                 {
-                    b.HasOne("Lab.Components.Models.Puesto", null)
+                    b.HasOne("Lab.Components.Models.Puesto", "PuestoAsignado")
                         .WithMany("OperariosAsignados")
-                        .HasForeignKey("PuestoNroPuesto");
+                        .HasForeignKey("PuestoAsignadoId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("PuestoAsignado");
                 });
 
             modelBuilder.Entity("Lab.Components.Models.Oficina", b =>

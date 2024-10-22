@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Lab.Components.Pages;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Lab.Components.Models
@@ -16,7 +17,9 @@ namespace Lab.Components.Models
         public int idOficina { get; set; }
 
         // Propiedad de navegación
-        public Oficina Oficina { get; set; }
+        public Oficina? Oficina { get; set; }
+
+        public List<Operario>? OperariosAsignados { get; set; } = new();
 
         public void TerminarTramite(int NroTramite) { }
         public void SiguienteTramite(int NroTramite) { }

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Lab.Components.Models;
+using Lab.Components.Pages;
 
 namespace Lab.Data
 {
@@ -18,6 +19,7 @@ namespace Lab.Data
         public DbSet<Lab.Components.Models.Tramite> Tramite { get; set; } = default!;
         public DbSet<Lab.Components.Models.Puesto> Puesto { get; set; } = default!;
         public DbSet<Lab.Components.Models.Usuario> Usuario { get; set; } = default!;
+        public DbSet<Lab.Components.Models.Operario> Operario { get; set; } = default!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -26,8 +28,15 @@ namespace Lab.Data
                 .WithOne(p => p.Oficina)
                 .HasForeignKey(p => p.idOficina);
 
+            modelBuilder.Entity<Puesto>()
+                .HasOne(p => p.Oficina)
+                .WithMany(o => o.ListaPuestos)
+                .HasForeignKey(p => p.idOficina);
 
-
+            modelBuilder.Entity<Usuario>()
+                .HasDiscriminator<string>("UserType")
+                .HasValue<Usuario>("Usuario")
+                .HasValue<Operario>("Operario");
 
             base.OnModelCreating(modelBuilder);
         }

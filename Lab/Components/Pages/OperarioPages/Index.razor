@@ -1,0 +1,38 @@
+﻿@page "/operarios"
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using Lab.Components.Models
+@using Lab.Data
+@implements IAsyncDisposable
+@inject IDbContextFactory<Lab.Data.LabContext> DbFactory
+
+<PageTitle>Index</PageTitle>
+
+<h1>Index</h1>
+
+<p>
+    <a href="operarios/create">Create New</a>
+</p>
+
+<QuickGrid Class="table" Items="context.Operario">
+    <PropertyColumn Property="operario => operario.NumeroOperario" />
+    <PropertyColumn Property="operario => operario.PuestoAsignadoId" />
+    <PropertyColumn Property="operario => operario.Password" />
+
+    <TemplateColumn Context="operario">
+        <a href="@($"operarios/edit?username={operario.Username}")">Edit</a> |
+        <a href="@($"operarios/details?username={operario.Username}")">Details</a> |
+        <a href="@($"operarios/delete?username={operario.Username}")">Delete</a>
+    </TemplateColumn>
+</QuickGrid>
+
+@code {
+    private LabContext context = default!;
+
+    protected override void OnInitialized()
+    {
+        context = DbFactory.CreateDbContext();
+    }
+
+    public async ValueTask DisposeAsync() => await context.DisposeAsync();
+}

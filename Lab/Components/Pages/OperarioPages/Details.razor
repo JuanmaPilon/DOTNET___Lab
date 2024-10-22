@@ -1,0 +1,50 @@
+﻿@page "/operarios/details"
+@using Microsoft.EntityFrameworkCore
+@using Lab.Components.Models
+@inject IDbContextFactory<Lab.Data.LabContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Details</PageTitle>
+
+<h1>Details</h1>
+
+<div>
+    <h2>Operario</h2>
+    <hr />
+    @if (operario is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+        <dl class="row">
+            <dt class="col-sm-2">NumeroOperario</dt>
+            <dd class="col-sm-10">@operario.NumeroOperario</dd>
+            <dt class="col-sm-2">PuestoAsignadoId</dt>
+            <dd class="col-sm-10">@operario.PuestoAsignadoId</dd>
+            <dt class="col-sm-2">Password</dt>
+            <dd class="col-sm-10">@operario.Password</dd>
+        </dl>
+        <div>
+            <a href="@($"/operarios/edit?username={operario.Username}")">Edit</a> |
+            <a href="@($"/operarios")">Back to List</a>
+        </div>
+    }
+</div>
+
+@code {
+    private Operario? operario;
+
+    [SupplyParameterFromQuery]
+    private string Username { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        operario = await context.Operario.FirstOrDefaultAsync(m => m.Username == Username);
+
+        if (operario is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+}

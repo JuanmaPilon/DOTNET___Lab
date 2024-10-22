@@ -1,0 +1,99 @@
+﻿@page "/operarios/edit"
+@using Microsoft.EntityFrameworkCore
+@using Lab.Components.Models
+@inject IDbContextFactory<Lab.Data.LabContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Edit</PageTitle>
+
+<h1>Edit</h1>
+
+<h2>Operario</h2>
+<hr />
+@if (Operario is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-4">
+            <EditForm method="post" Model="Operario" OnValidSubmit="UpdateOperario" FormName="edit" Enhance>
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <input type="hidden" name="Operario.Username" value="@Operario.Username" />
+                <div class="mb-3">
+                    <label for="numerooperario" class="form-label">NumeroOperario:</label>
+                    <InputNumber id="numerooperario" @bind-Value="Operario.NumeroOperario" class="form-control" />
+                    <ValidationMessage For="() => Operario.NumeroOperario" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="puestoasignadoid" class="form-label">PuestoAsignadoId:</label>
+                    <InputNumber id="puestoasignadoid" @bind-Value="Operario.PuestoAsignadoId" class="form-control" />
+                    <ValidationMessage For="() => Operario.PuestoAsignadoId" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password:</label>
+                    <InputText id="password" @bind-Value="Operario.Password" class="form-control" />
+                    <ValidationMessage For="() => Operario.Password" class="text-danger" />
+                </div>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+<div>
+    <a href="/operarios">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    private string Username { get; set; }
+
+    [SupplyParameterFromForm]
+    private Operario? Operario { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        Operario ??= await context.Operario.FirstOrDefaultAsync(m => m.Username == Username);
+
+        if (Operario is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    // To protect from overposting attacks, enable the specific properties you want to bind to.
+    // For more information, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    private async Task UpdateOperario()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Attach(Operario!).State = EntityState.Modified;
+
+        try
+        {
+            await context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!OperarioExists(Operario!.Username))
+            {
+                NavigationManager.NavigateTo("notfound");
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+        NavigationManager.NavigateTo("/operarios");
+    }
+
+    private bool OperarioExists(string username)
+    {
+        using var context = DbFactory.CreateDbContext();
+        return context.Operario.Any(e => e.Username == username);
+    }
+}
