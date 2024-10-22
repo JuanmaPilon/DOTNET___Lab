@@ -26,6 +26,9 @@ namespace Lab.Data
                 .WithOne(p => p.Oficina)
                 .HasForeignKey(p => p.idOficina);
 
+
+
+
             base.OnModelCreating(modelBuilder);
         }
     }

@@ -16,11 +16,8 @@
             <DataAnnotationsValidator />
             <ValidationSummary class="text-danger" />
             <div class="mb-3">
-                <label for="username" class="form-label">Username:</label>
-                <InputText id="username" @bind-Value="Usuario.Username" class="form-control" />
-                <ValidationMessage For="() => Usuario.Username" class="text-danger" />
-            </div>
-            <div class="mb-3">
+                <label for="user" class="form-label">user:</label>
+                <InputText id="user" @bind-Value="Usuario.Username" class="form-control" />
                 <label for="password" class="form-label">Password:</label> 
                 <InputText id="password" @bind-Value="Usuario.Password" class="form-control" /> 
                 <ValidationMessage For="() => Usuario.Password" class="text-danger" /> 
