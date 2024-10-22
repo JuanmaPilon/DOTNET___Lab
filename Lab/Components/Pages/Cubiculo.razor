@@ -1,0 +1,38 @@
+﻿@page "/cubiculo"
+@attribute [StreamRendering]
+@inject NavigationManager Navigation
+@inject UserSessionService UserSessionService
+
+@rendermode InteractiveServer
+@using Lab.Components.Models
+
+<h3>Cubiculo</h3>
+
+<div>
+    <button class="btn btn-success" @onclick="TerminarTramite">Terminar Trámite</button>
+    <button class="btn btn-primary" @onclick="SiguienteTramite">Siguiente Trámite</button>
+</div>
+
+@code {
+    //tomar el operario de la sesion
+    //tomar el puesto que le corresponde al operario en lugar de crear uno nuevo
+    private Puesto puesto = new Puesto
+        {
+            NroPuesto = 1,  // Configura los valores que necesites
+            Estado = true,
+            TramiteActual = 0,
+            idOficina = 1  // Ajusta según la oficina correcta
+        };
+
+    private void TerminarTramite()
+    {
+        puesto.TerminarTramite(puesto.TramiteActual);
+        Console.WriteLine($"Trámite terminado.");
+    }
+
+    private void SiguienteTramite()
+    {
+        puesto.SiguienteTramite(puesto.TramiteActual);
+        Console.WriteLine($"Iniciado el siguiente trámite");
+    }
+}

@@ -19,8 +19,6 @@ namespace Lab.Components.Models
         // Propiedad de navegación
         public Oficina? Oficina { get; set; }
 
-        public List<Operario>? OperariosAsignados { get; set; } = new();
-
         public void TerminarTramite(int NroTramite) { }
         public void SiguienteTramite(int NroTramite) { }
     }
