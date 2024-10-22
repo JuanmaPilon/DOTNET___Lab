@@ -15,11 +15,15 @@
         <EditForm method="post" Model="Operario" OnValidSubmit="AddOperario" FormName="create" Enhance>
             <DataAnnotationsValidator />
             <ValidationSummary class="text-danger" />
-        
             <div class="mb-3">
                 <label for="username" class="form-label">UserName:</label>
                 <InputText id="username" @bind-Value="Operario.Username" class="form-control" />
                 <ValidationMessage For="() => Operario.Username" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">Password:</label>
+                <InputText id="password" @bind-Value="Operario.Password" class="form-control" />
+                <ValidationMessage For="() => Operario.Password" class="text-danger" />
             </div>
             <div class="mb-3">
                 <label for="numerooperario" class="form-label">NumeroOperario:</label> 
@@ -30,8 +34,7 @@
                 <label for="puestoasignadoid" class="form-label">PuestoAsignadoId:</label> 
                 <InputNumber id="puestoasignadoid" @bind-Value="Operario.PuestoAsignadoId" class="form-control" /> 
                 <ValidationMessage For="() => Operario.PuestoAsignadoId" class="text-danger" /> 
-            </div>
-    
+            </div>        
             <div class="mb-3">
                 <label for="password" class="form-label">Password:</label> 
                 <InputText id="password" @bind-Value="Operario.Password" class="form-control" /> 
@@ -39,7 +42,6 @@
             </div>        
             <button type="submit" class="btn btn-primary">Create</button>
         </EditForm>
- 
     </div>
 </div>
 
@@ -48,19 +50,15 @@
 </div>
 
 @code {
-
     [SupplyParameterFromForm]
     private Operario Operario { get; set; } = new();
-    
 
     // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
     private async Task AddOperario()
     {
-        Console.WriteLine($"idOficina ingresado: {Operario.PuestoAsignadoId}");
         using var context = DbFactory.CreateDbContext();
         context.Operario.Add(Operario);
         await context.SaveChangesAsync();
         NavigationManager.NavigateTo("/operarios");
-
     }
 }
