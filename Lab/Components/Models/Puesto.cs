@@ -19,7 +19,22 @@ namespace Lab.Components.Models
         // Propiedad de navegación
         public Oficina? Oficina { get; set; }
 
-        public void TerminarTramite(int NroTramite) { }
-        public void SiguienteTramite(int NroTramite) { }
+        public void TerminarTramite(Tramite tramite)
+        {
+            // Cambiar el estado del puesto
+            TramiteActual = 0;
+            Estado = false;
+
+            // Asignar la fecha de finalización al trámite
+            tramite.FechaFin = DateTime.Now;
+        }
+        public void SiguienteTramite(Tramite nuevoTramite)
+        {
+            // Asignar el nuevo número de trámite al puesto
+            TramiteActual = nuevoTramite.NroTramite;
+
+            // Reactivar el puesto
+            Estado = true;
+        }
     }
 }

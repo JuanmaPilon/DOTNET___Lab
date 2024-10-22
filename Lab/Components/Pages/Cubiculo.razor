@@ -2,37 +2,113 @@
 @attribute [StreamRendering]
 @inject NavigationManager Navigation
 @inject UserSessionService UserSessionService
-
-@rendermode InteractiveServer
 @using Lab.Components.Models
+@using Microsoft.EntityFrameworkCore
+@inject IDbContextFactory<Lab.Data.LabContext> DbFactory
+@rendermode InteractiveServer
+
 
 <h3>Cubiculo</h3>
 
 <div>
+    <div>
+        <p>Username: @username</p>
+        <p>Role: @role</p>
+    </div>
     <button class="btn btn-success" @onclick="TerminarTramite">Terminar Trámite</button>
     <button class="btn btn-primary" @onclick="SiguienteTramite">Siguiente Trámite</button>
 </div>
 
 @code {
-    //tomar el operario de la sesion
-    //tomar el puesto que le corresponde al operario en lugar de crear uno nuevo
-    private Puesto puesto = new Puesto
-        {
-            NroPuesto = 1,  // Configura los valores que necesites
-            Estado = true,
-            TramiteActual = 0,
-            idOficina = 1  // Ajusta según la oficina correcta
-        };
+    private string username;
+    private string role;
+    private Puesto puesto;  // Este es el puesto del operario
+    private Tramite tramiteActual;  // Trámite actual del puesto
 
-    private void TerminarTramite()
+    protected override async Task OnInitializedAsync()
     {
-        puesto.TerminarTramite(puesto.TramiteActual);
-        Console.WriteLine($"Trámite terminado.");
+        var session = UserSessionService.GetCurrentSession();
+        username = session.username ?? "No user";
+        role = session.role ?? "No role";
+
+        using var context = await DbFactory.CreateDbContextAsync();
+
+        if (role == "Operario")
+        {
+            var usuario = await context.Usuario.FirstOrDefaultAsync(u => u.Username == username);
+
+            if (usuario is Operario operario)
+            {
+                puesto = await context.Puesto.FirstOrDefaultAsync(p => p.NroPuesto == operario.PuestoAsignadoId);
+
+                if (puesto != null)
+                {
+                    // Obtener el trámite actual del puesto
+                    tramiteActual = await context.Tramite.FirstOrDefaultAsync(t => t.NroTramite == puesto.TramiteActual);
+
+                    if (tramiteActual == null)
+                    {
+                        Console.WriteLine("No se encontró un trámite actual para este puesto.");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Error: No se encontró un puesto asignado para este operario.");
+                }
+            }
+        }
     }
 
-    private void SiguienteTramite()
+    private async Task TerminarTramite()
     {
-        puesto.SiguienteTramite(puesto.TramiteActual);
-        Console.WriteLine($"Iniciado el siguiente trámite");
+        if (puesto != null && tramiteActual != null)
+        {
+            // Terminar el trámite
+            puesto.TerminarTramite(tramiteActual);
+
+            using var context = await DbFactory.CreateDbContextAsync();
+
+            // Guardar los cambios en la base de datos
+            context.Puesto.Update(puesto);
+            context.Tramite.Update(tramiteActual);
+            await context.SaveChangesAsync();
+
+            Console.WriteLine("Trámite terminado.");
+        }
+        else
+        {
+            Console.WriteLine("Error: No hay trámite o puesto asignado.");
+        }
+    }
+
+    private async Task SiguienteTramite()
+    {
+        if (puesto != null)
+        {
+            using var context = await DbFactory.CreateDbContextAsync();
+
+            // Buscar el siguiente trámite sin número de puesto asignado
+            var siguienteTramite = await context.Tramite.FirstOrDefaultAsync(t => string.IsNullOrEmpty(t.NroPuesto));
+
+            if (siguienteTramite != null)
+            {
+                // Asignar el número de puesto del operario al siguiente trámite
+                siguienteTramite.NroPuesto = puesto.NroPuesto.ToString();
+
+                // Actualizar la base de datos
+                context.Tramite.Update(siguienteTramite);
+                await context.SaveChangesAsync();
+
+                Console.WriteLine($"Se asignó el puesto {puesto.NroPuesto} al siguiente trámite: {siguienteTramite.NroTramite}");
+            }
+            else
+            {
+                Console.WriteLine("No se encontró un trámite disponible para asignar.");
+            }
+        }
+        else
+        {
+            Console.WriteLine("Error: No hay puesto asignado para este operario.");
+        }
     }
 }
