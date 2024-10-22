@@ -22,8 +22,8 @@
 @code {
     private string username;
     private string role;
-    private Puesto puesto;  // Este es el puesto del operario
-    private Tramite tramiteActual;  // Trámite actual del puesto
+    private Puesto puesto;  // hay que buscar que puesto tiene asignado el operario y traerlo de la bd
+    private Tramite tramiteActual;  // hay qye buscar el tramite del puesto traido en la linea de arriba
 
     protected override async Task OnInitializedAsync()
     {
