@@ -12,24 +12,9 @@
 <hr />
 <div class="row">
     <div class="col-md-4">
-        <EditForm method="post" Model="Puesto" OnValidSubmit="AddPuesto" FormName="create" Enhance>
+        <EditForm Model="@Puesto" OnValidSubmit="AddPuesto" FormName="create" Enhance>
             <DataAnnotationsValidator />
             <ValidationSummary class="text-danger" />
-            <div class="mb-3">
-                <label for="estado" class="form-label">Estado:</label> 
-                <InputCheckbox id="estado" @bind-Value="Puesto.Estado" class="form-check-input" /> 
-                <ValidationMessage For="() => Puesto.Estado" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="tramiteactual" class="form-label">TramiteActual:</label> 
-                <InputNumber id="tramiteactual" @bind-Value="Puesto.TramiteActual" class="form-control" /> 
-                <ValidationMessage For="() => Puesto.TramiteActual" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="idoficina" class="form-label">idOficina:</label> 
-                <InputNumber id="idoficina" @bind-Value="Puesto.idOficina" class="form-control" /> 
-                <ValidationMessage For="() => Puesto.idOficina" class="text-danger" /> 
-            </div>        
             <button type="submit" class="btn btn-primary">Create</button>
         </EditForm>
     </div>
@@ -40,15 +25,40 @@
 </div>
 
 @code {
-    [SupplyParameterFromForm]
-    private Puesto Puesto { get; set; } = new();
+    private Puesto Puesto { get; set; } = new()
+    {
+        idOficina =1
+    };
 
-    // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+
     private async Task AddPuesto()
     {
+        Console.WriteLine($"idOficina ingresado: {Puesto.idOficina}");
+
+        if (Puesto.idOficina == 0)
+        {
+            Console.WriteLine("Error: idOficina no fue seleccionado correctamente.");
+            return;
+        }
+
+        Puesto.Estado = true;
+        Puesto.TramiteActual = 0;
+
         using var context = DbFactory.CreateDbContext();
+
+        var oficinaExiste = await context.Oficina.AnyAsync(o => o.idOficina == Puesto.idOficina);
+
+        if (!oficinaExiste)
+        {
+            Console.WriteLine("Error: La Oficina no existe.");
+            return;
+        }
+
         context.Puesto.Add(Puesto);
         await context.SaveChangesAsync();
         NavigationManager.NavigateTo("/puestos");
     }
+
+
 }
+

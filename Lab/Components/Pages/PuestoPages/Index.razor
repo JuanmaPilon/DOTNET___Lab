@@ -6,15 +6,16 @@
 @implements IAsyncDisposable
 @inject IDbContextFactory<Lab.Data.LabContext> DbFactory
 
-<PageTitle>Index</PageTitle>
+<PageTitle>Gestion De Puestos</PageTitle>
 
-<h1>Index</h1>
+<h1>Gestion de Puestos</h1>
 
 <p>
-    <a href="puestos/create">Create New</a>
+    <a href="puestos/create">Crear Puesto</a>
 </p>
 
 <QuickGrid Class="table" Items="context.Puesto">
+    <PropertyColumn Property="puesto => puesto.NroPuesto" />
     <PropertyColumn Property="puesto => puesto.Estado" />
     <PropertyColumn Property="puesto => puesto.TramiteActual" />
     <PropertyColumn Property="puesto => puesto.idOficina" />
