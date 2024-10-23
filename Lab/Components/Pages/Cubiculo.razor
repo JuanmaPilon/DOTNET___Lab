@@ -7,13 +7,16 @@
 @inject IDbContextFactory<Lab.Data.LabContext> DbFactory
 @rendermode InteractiveServer
 
-
 <h3>Cubiculo</h3>
 
 <div>
     <div>
         <p>Username: @username</p>
         <p>Role: @role</p>
+    </div>
+    <div>
+        <p>Trámite actual: @tramiteActual?.NroTramite ?? "No hay trámite asignado"</p>
+        <p>Fecha de inicio: @tramiteActual?.FechaInicio.ToString("dd/MM/yyyy") ?? "No disponible"</p>
     </div>
     <button class="btn btn-success" @onclick="TerminarTramite">Terminar Trámite</button>
     <button class="btn btn-primary" @onclick="SiguienteTramite">Siguiente Trámite</button>
@@ -22,8 +25,8 @@
 @code {
     private string username;
     private string role;
-    private Puesto puesto;  // hay que buscar que puesto tiene asignado el operario y traerlo de la bd
-    private Tramite tramiteActual;  // hay qye buscar el tramite del puesto traido en la linea de arriba
+    private Puesto puesto;  // hay que buscar el puesto asignado al operario
+    private Tramite tramiteActual;  // Buscar el trámite actual asignado al puesto
 
     protected override async Task OnInitializedAsync()
     {
@@ -44,7 +47,7 @@
                 if (puesto != null)
                 {
                     // Obtener el trámite actual del puesto
-                    tramiteActual = await context.Tramite.FirstOrDefaultAsync(t => t.NroTramite == puesto.TramiteActual);
+                    tramiteActual = await context.Tramite.FirstOrDefaultAsync(t => t.NroPuesto == puesto.NroPuesto.ToString());
 
                     if (tramiteActual == null)
                     {
@@ -63,8 +66,8 @@
     {
         if (puesto != null && tramiteActual != null)
         {
-            // Terminar el trámite
-            puesto.TerminarTramite(tramiteActual);
+            // Asignar la fecha de fin al trámite actual
+            tramiteActual.FechaFin = DateTime.Now;
 
             using var context = await DbFactory.CreateDbContextAsync();
 
@@ -85,25 +88,46 @@
     {
         if (puesto != null)
         {
-            using var context = await DbFactory.CreateDbContextAsync();
-
-            // Buscar el siguiente trámite sin número de puesto asignado
-            var siguienteTramite = await context.Tramite.FirstOrDefaultAsync(t => string.IsNullOrEmpty(t.NroPuesto));
-
-            if (siguienteTramite != null)
+            try
             {
-                // Asignar el número de puesto del operario al siguiente trámite
-                siguienteTramite.NroPuesto = puesto.NroPuesto.ToString();
+                using var context = await DbFactory.CreateDbContextAsync();
 
-                // Actualizar la base de datos
-                context.Tramite.Update(siguienteTramite);
-                await context.SaveChangesAsync();
+                // Obtener todos los trámites con NroPuesto NULL o vacío
+                var tramitesSinPuesto = await context.Tramite
+                    .Where(t => t.NroPuesto == null || t.NroPuesto == "--" || t.NroPuesto == "")
+                    .ToListAsync();
 
-                Console.WriteLine($"Se asignó el puesto {puesto.NroPuesto} al siguiente trámite: {siguienteTramite.NroTramite}");
+                // Depuración: Verifica cuántos trámites se han encontrado
+                Console.WriteLine($"Se encontraron {tramitesSinPuesto.Count} trámites sin puesto asignado.");
+
+                // Si hay trámites disponibles, asignar el número de puesto
+                if (tramitesSinPuesto.Any())
+                {
+                    var siguienteTramite = tramitesSinPuesto.FirstOrDefault();  // Obtén el primer trámite sin puesto
+
+                    if (siguienteTramite != null)
+                    {
+                        // Asignar el número de puesto del operario al siguiente trámite
+                        siguienteTramite.NroPuesto = puesto.NroPuesto.ToString();
+
+                        // Actualizar la base de datos
+                        context.Tramite.Update(siguienteTramite);
+                        await context.SaveChangesAsync();
+
+                        // Actualizar el trámite actual para mostrar los datos
+                        tramiteActual = siguienteTramite;
+
+                        Console.WriteLine($"Se asignó el puesto {puesto.NroPuesto} al siguiente trámite: {siguienteTramite.NroTramite}");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("No se encontró un trámite disponible para asignar.");
+                }
             }
-            else
+            catch (Exception ex)
             {
-                Console.WriteLine("No se encontró un trámite disponible para asignar.");
+                Console.WriteLine($"Error al asignar el siguiente trámite: {ex.Message}");
             }
         }
         else
