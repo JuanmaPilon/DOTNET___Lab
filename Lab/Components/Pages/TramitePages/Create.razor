@@ -1,8 +1,11 @@
 ﻿@page "/tramites/create"
 @using Microsoft.EntityFrameworkCore
 @using Lab.Components.Models
+@using Lab.Components.Hubs
 @inject IDbContextFactory<Lab.Data.LabContext> DbFactory
 @inject NavigationManager NavigationManager
+@using Microsoft.AspNetCore.SignalR
+@inject IHubContext<Lab.Components.Hubs.TramiteHub> TramiteHubContext
 
 <PageTitle>Create</PageTitle>
 
@@ -43,6 +46,11 @@
         using var context = DbFactory.CreateDbContext();
         context.Tramite.Add(Tramite);
         await context.SaveChangesAsync();
+
+        // Notificar a los clientes conectados al monitor que hay un nuevo trámite
+        await TramiteHubContext.Clients.All.SendAsync("ReceiveTramiteUpdate");
+
         NavigationManager.NavigateTo("/tramites");
     }
 }
+
