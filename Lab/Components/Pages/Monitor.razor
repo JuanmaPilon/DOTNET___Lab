@@ -24,7 +24,7 @@
         <tbody>
             @foreach (var tramite in TramitesActivos)
             {
-                <tr>
+                <tr class="@(tramiteResaltadoId == tramite.NroTramite ? "table-warning" : "")">
                     <td>@tramite.NroTramite</td>
                     <td>@tramite.CedulaCliente</td>
                     <td>@tramite.NroPuesto</td>
@@ -43,6 +43,7 @@ else
 @code {
     private List<Tramite> TramitesActivos { get; set; } = new();
     private HubConnection hubConnection;
+    private int? tramiteResaltadoId; // ID del trámite a resaltar
 
     protected override async Task OnInitializedAsync()
     {
@@ -53,11 +54,18 @@ else
             .WithUrl(Navigation.ToAbsoluteUri("/tramiteHub"))
             .Build();
 
-        // Escuchar el evento "ReceiveTramiteUpdate"
+        // Escuchar el evento "ReceiveTramiteUpdate" para recargar trámites activos
         hubConnection.On("ReceiveTramiteUpdate", async () =>
         {
             await LoadTramites();  // Recargar trámites
-            StateHasChanged();     // Actualizar la UI
+            await InvokeAsync(StateHasChanged); // Asegurar actualización de la UI en el Dispatcher
+        });
+
+        // Escuchar el evento "ReceiveLlamarDeNuevo" para resaltar un trámite específico
+        hubConnection.On<int>("ReceiveLlamarDeNuevo", (nroTramite) =>
+        {
+            tramiteResaltadoId = nroTramite;  // Asignar el ID del trámite a resaltar
+            InvokeAsync(StateHasChanged); // Usar InvokeAsync para actualizar la UI en el hilo correcto
         });
 
         await hubConnection.StartAsync();

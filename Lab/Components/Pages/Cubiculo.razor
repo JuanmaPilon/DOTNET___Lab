@@ -24,6 +24,8 @@
     </div>
     <button class="btn btn-success" @onclick="TerminarTramite">Terminar Trámite</button>
     <button class="btn btn-primary" @onclick="SiguienteTramite">Siguiente Trámite</button>
+    <button class="btn btn-warning" @onclick="LlamarDeNuevo">Llamar de nuevo</button>
+
 </div>
 
 @code {
@@ -171,4 +173,18 @@
             Console.WriteLine("Error: No hay puesto asignado para este operario.");
         }
     }
+    private async Task LlamarDeNuevo()
+    {
+        if (tramiteActual != null)
+        {
+            // Notificar a SignalR que se ha solicitado "Llamar de nuevo" para el trámite actual
+            await TramiteHubContext.Clients.All.SendAsync("ReceiveLlamarDeNuevo", tramiteActual.NroTramite);
+            Console.WriteLine("Llamar de nuevo solicitado para trámite: " + tramiteActual.NroTramite);
+        }
+        else
+        {
+            Console.WriteLine("Error: No hay trámite asignado para llamar de nuevo.");
+        }
+    }
+
 }
