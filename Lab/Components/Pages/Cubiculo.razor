@@ -5,7 +5,11 @@
 @using Lab.Components.Models
 @using Microsoft.EntityFrameworkCore
 @inject IDbContextFactory<Lab.Data.LabContext> DbFactory
+@using Microsoft.AspNetCore.SignalR
+@using Microsoft.AspNetCore.SignalR.Client
+@inject IHubContext<Lab.Components.Hubs.TramiteHub> TramiteHubContext
 @rendermode InteractiveServer
+@implements IAsyncDisposable
 
 <h3>Cubiculo</h3>
 
@@ -23,6 +27,7 @@
 </div>
 
 @code {
+    private HubConnection hubConnection;
     private string username;
     private string role;
     private Puesto puesto;  // hay que buscar el puesto asignado al operario
@@ -35,6 +40,22 @@
         role = session.role ?? "No role";
 
         using var context = await DbFactory.CreateDbContextAsync();
+
+        hubConnection = new HubConnectionBuilder()
+           .WithUrl(Navigation.ToAbsoluteUri("/tramiteHub"))
+           .Build();
+
+           // Escuchar el evento para actualizaciones en tiempo real
+        hubConnection.On("ReceiveTramiteUpdate", async () =>
+        {
+
+            // Notificar a los clientes conectados que un trámite ha sido terminado
+            await TramiteHubContext.Clients.All.SendAsync("TramiteActualizado");
+            StateHasChanged();
+        });
+
+        await hubConnection.StartAsync();
+        await base.OnInitializedAsync();
 
         if (role == "Operario")
         {
@@ -59,6 +80,15 @@
                     Console.WriteLine("Error: No se encontró un puesto asignado para este operario.");
                 }
             }
+
+        }
+
+    }
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null)
+        {
+            await hubConnection.DisposeAsync();
         }
     }
 
@@ -71,12 +101,18 @@
 
             using var context = await DbFactory.CreateDbContextAsync();
 
+            // Restablecer el Trámite Actual del puesto a 0
+            puesto.TramiteActual = 0;
+
             // Guardar los cambios en la base de datos
             context.Puesto.Update(puesto);
             context.Tramite.Update(tramiteActual);
             await context.SaveChangesAsync();
 
             Console.WriteLine("Trámite terminado.");
+            // Notificar a SignalR que el trámite ha sido actualizado
+            await TramiteHubContext.Clients.All.SendAsync("ReceiveTramiteUpdate");
+            StateHasChanged();
         }
         else
         {
@@ -92,32 +128,32 @@
             {
                 using var context = await DbFactory.CreateDbContextAsync();
 
-                // Obtener todos los trámites con NroPuesto NULL o vacío
                 var tramitesSinPuesto = await context.Tramite
                     .Where(t => t.NroPuesto == null || t.NroPuesto == "--" || t.NroPuesto == "")
                     .ToListAsync();
 
-                // Depuración: Verifica cuántos trámites se han encontrado
-                Console.WriteLine($"Se encontraron {tramitesSinPuesto.Count} trámites sin puesto asignado.");
-
-                // Si hay trámites disponibles, asignar el número de puesto
                 if (tramitesSinPuesto.Any())
                 {
-                    var siguienteTramite = tramitesSinPuesto.FirstOrDefault();  // Obtén el primer trámite sin puesto
+                    var siguienteTramite = tramitesSinPuesto.FirstOrDefault();
 
                     if (siguienteTramite != null)
                     {
-                        // Asignar el número de puesto del operario al siguiente trámite
                         siguienteTramite.NroPuesto = puesto.NroPuesto.ToString();
 
-                        // Actualizar la base de datos
+                        // Actualizar el Trámite Actual en el puesto
+                        puesto.TramiteActual = siguienteTramite.NroTramite;
+                        context.Puesto.Update(puesto);
+
+                        // Guardar cambios en el trámite y el puesto
                         context.Tramite.Update(siguienteTramite);
                         await context.SaveChangesAsync();
 
-                        // Actualizar el trámite actual para mostrar los datos
                         tramiteActual = siguienteTramite;
 
                         Console.WriteLine($"Se asignó el puesto {puesto.NroPuesto} al siguiente trámite: {siguienteTramite.NroTramite}");
+
+                        await TramiteHubContext.Clients.All.SendAsync("ReceiveTramiteUpdate");
+                        StateHasChanged();
                     }
                 }
                 else

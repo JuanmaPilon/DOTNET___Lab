@@ -15,10 +15,10 @@
 </p>
 
 <QuickGrid Class="table" Items="context.Puesto">
-    <PropertyColumn Property="puesto => puesto.NroPuesto" />
-    <PropertyColumn Property="puesto => puesto.Estado" />
-    <PropertyColumn Property="puesto => puesto.TramiteActual" />
-    <PropertyColumn Property="puesto => puesto.idOficina" />
+    <PropertyColumn Property="puesto => puesto.NroPuesto" Title="Número de Puesto" />
+    <PropertyColumn Property="puesto => puesto.Estado" Title="Estado" />
+    <PropertyColumn Property="puesto => puesto.TramiteActual" Title="Trámite Actual" />
+    <PropertyColumn Property="puesto => puesto.idOficina" Title="ID Oficina" />
 
     <TemplateColumn Context="puesto">
         <a href="@($"puestos/edit?nropuesto={puesto.NroPuesto}")">Edit</a> |

@@ -1,6 +1,7 @@
 ﻿using Lab.Components;
 using Microsoft.EntityFrameworkCore;
 using Lab.Data;
+using Lab.Components.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContextFactory<LabContext>(options =>
@@ -9,6 +10,11 @@ builder.Services.AddDbContextFactory<LabContext>(options =>
 builder.Services.AddQuickGridEntityFrameworkAdapter();
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+// Agregar servicios al contenedor.
+builder.Services.AddControllersWithViews();
+builder.Services.AddRazorPages();
+// Agregar SignalR al servicio
+builder.Services.AddSignalR();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
@@ -36,6 +42,12 @@ app.UseAntiforgery();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
+// Mapeo de SignalR Hub
+app.MapHub<TramiteHub>("/tramiteHub");
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
+app.MapRazorPages();
 
 
 app.Run();

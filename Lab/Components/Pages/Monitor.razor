@@ -2,6 +2,8 @@
 @using Lab.Components.Models
 @using Microsoft.EntityFrameworkCore
 @inject IDbContextFactory<Lab.Data.LabContext> DbFactory
+@using Microsoft.AspNetCore.SignalR.Client
+@inject NavigationManager Navigation
 
 @rendermode InteractiveServer
 
@@ -40,10 +42,38 @@ else
 
 @code {
     private List<Tramite> TramitesActivos { get; set; } = new();
+    private HubConnection hubConnection;
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadTramites();
+
+        // Configurar conexión de SignalR
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(Navigation.ToAbsoluteUri("/tramiteHub"))
+            .Build();
+
+        // Escuchar el evento "ReceiveTramiteUpdate"
+        hubConnection.On("ReceiveTramiteUpdate", async () =>
+        {
+            await LoadTramites();  // Recargar trámites
+            StateHasChanged();     // Actualizar la UI
+        });
+
+        await hubConnection.StartAsync();
+    }
+
+    private async Task LoadTramites()
+    {
         using var context = await DbFactory.CreateDbContextAsync();
         TramitesActivos = await context.Tramite.ToListAsync();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null)
+        {
+            await hubConnection.DisposeAsync();
+        }
     }
 }
