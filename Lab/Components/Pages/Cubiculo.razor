@@ -10,21 +10,31 @@
 @inject IHubContext<Lab.Components.Hubs.TramiteHub> TramiteHubContext
 @rendermode InteractiveServer
 @implements IAsyncDisposable
+@inject IJSRuntime JSRuntime
+
 
 <h3>Cubiculo</h3>
 
 <div>
-    <div>
-        <p>Username: @username</p>
-        <p>Role: @role</p>
-    </div>
-    <div>
-        <p>Trámite actual: @tramiteActual?.NroTramite ?? "No hay trámite asignado"</p>
-        <p>Fecha de inicio: @tramiteActual?.FechaInicio.ToString("dd/MM/yyyy") ?? "No disponible"</p>
-    </div>
-    <button class="btn btn-success" @onclick="TerminarTramite">Terminar Trámite</button>
-    <button class="btn btn-primary" @onclick="SiguienteTramite" disabled="@(esTramiteActivo)">Siguiente Trámite</button>
-    <button class="btn btn-warning" @onclick="LlamarDeNuevo">Llamar de nuevo</button>
+    @if (tramiteActual != null)
+    {
+        <div>
+            <p>Username: @username</p>
+            <p>Role: @role</p>
+        </div>
+        <div>
+            <p>Trámite actual: @tramiteActual.NroTramite</p>
+            <p>Fecha de inicio: @tramiteActual.FechaInicio.ToString("dd/MM/yyyy")</p>
+        </div>
+        <button class="btn btn-success" @onclick="TerminarTramite">Terminar Trámite</button>
+        <button class="btn btn-primary" @onclick="SiguienteTramite" disabled="@(esTramiteActivo)">Siguiente Trámite</button>
+        <button class="btn btn-warning" @onclick="LlamarDeNuevo">Llamar de nuevo</button>
+    }
+    else
+    {
+        <p>No hay trámite asignado actualmente.</p>
+        <button class="btn btn-primary" @onclick="SiguienteTramite" disabled="@(esTramiteActivo)">Siguiente Trámite</button>
+    }
 </div>
 
 @code {
@@ -80,6 +90,8 @@
                 }
                 else
                 {
+                    
+
                     Console.WriteLine("Error: No se encontró un puesto asignado para este operario.");
                 }
             }
@@ -162,6 +174,8 @@
                 }
                 else
                 {
+                    // Mostrar alerta en JavaScript
+                    await JSRuntime.InvokeVoidAsync("alert", "No hay más trámites para atender en este momento.");
                     Console.WriteLine("No se encontró un trámite disponible para asignar.");
                 }
             }
