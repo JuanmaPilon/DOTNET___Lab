@@ -23,9 +23,8 @@
         <p>Fecha de inicio: @tramiteActual?.FechaInicio.ToString("dd/MM/yyyy") ?? "No disponible"</p>
     </div>
     <button class="btn btn-success" @onclick="TerminarTramite">Terminar Trámite</button>
-    <button class="btn btn-primary" @onclick="SiguienteTramite">Siguiente Trámite</button>
+    <button class="btn btn-primary" @onclick="SiguienteTramite" disabled="@(esTramiteActivo)">Siguiente Trámite</button>
     <button class="btn btn-warning" @onclick="LlamarDeNuevo">Llamar de nuevo</button>
-
 </div>
 
 @code {
@@ -34,6 +33,7 @@
     private string role;
     private Puesto puesto;  // hay que buscar el puesto asignado al operario
     private Tramite tramiteActual;  // Buscar el trámite actual asignado al puesto
+    private bool esTramiteActivo; // Controla si el trámite actual está activo
 
     protected override async Task OnInitializedAsync()
     {
@@ -47,11 +47,9 @@
            .WithUrl(Navigation.ToAbsoluteUri("/tramiteHub"))
            .Build();
 
-           // Escuchar el evento para actualizaciones en tiempo real
+        // Escuchar el evento para actualizaciones en tiempo real
         hubConnection.On("ReceiveTramiteUpdate", async () =>
         {
-
-            // Notificar a los clientes conectados que un trámite ha sido terminado
             await TramiteHubContext.Clients.All.SendAsync("TramiteActualizado");
             StateHasChanged();
         });
@@ -72,6 +70,9 @@
                     // Obtener el trámite actual del puesto
                     tramiteActual = await context.Tramite.FirstOrDefaultAsync(t => t.NroPuesto == puesto.NroPuesto.ToString());
 
+                    // Determinar si hay un trámite activo (para habilitar/deshabilitar el botón)
+                    esTramiteActivo = tramiteActual != null;
+
                     if (tramiteActual == null)
                     {
                         Console.WriteLine("No se encontró un trámite actual para este puesto.");
@@ -82,10 +83,9 @@
                     Console.WriteLine("Error: No se encontró un puesto asignado para este operario.");
                 }
             }
-
         }
-
     }
+
     public async ValueTask DisposeAsync()
     {
         if (hubConnection is not null)
@@ -98,22 +98,24 @@
     {
         if (puesto != null && tramiteActual != null)
         {
-            // Asignar la fecha de fin al trámite actual
             tramiteActual.FechaFin = DateTime.Now;
 
             using var context = await DbFactory.CreateDbContextAsync();
 
-            // Restablecer el Trámite Actual del puesto a 0
             puesto.TramiteActual = 0;
 
-            // Guardar los cambios en la base de datos
             context.Puesto.Update(puesto);
             context.Tramite.Update(tramiteActual);
             await context.SaveChangesAsync();
 
             Console.WriteLine("Trámite terminado.");
+
             // Notificar a SignalR que el trámite ha sido actualizado
             await TramiteHubContext.Clients.All.SendAsync("ReceiveTramiteUpdate");
+
+            // Actualizar el estado de esTramiteActivo para habilitar "Siguiente Trámite"
+            tramiteActual = null;
+            esTramiteActivo = false;
             StateHasChanged();
         }
         else
@@ -142,11 +144,9 @@
                     {
                         siguienteTramite.NroPuesto = puesto.NroPuesto.ToString();
 
-                        // Actualizar el Trámite Actual en el puesto
                         puesto.TramiteActual = siguienteTramite.NroTramite;
                         context.Puesto.Update(puesto);
 
-                        // Guardar cambios en el trámite y el puesto
                         context.Tramite.Update(siguienteTramite);
                         await context.SaveChangesAsync();
 
@@ -154,6 +154,8 @@
 
                         Console.WriteLine($"Se asignó el puesto {puesto.NroPuesto} al siguiente trámite: {siguienteTramite.NroTramite}");
 
+                        // Cambiar estado para indicar que hay un trámite activo
+                        esTramiteActivo = true;
                         await TramiteHubContext.Clients.All.SendAsync("ReceiveTramiteUpdate");
                         StateHasChanged();
                     }
@@ -173,6 +175,7 @@
             Console.WriteLine("Error: No hay puesto asignado para este operario.");
         }
     }
+
     private async Task LlamarDeNuevo()
     {
         if (tramiteActual != null)
