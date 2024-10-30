@@ -13,7 +13,7 @@
     }
     else
     {
-        <a href="/login" style="margin-left: 10px;">Login</a>
+        <button @onclick="Login" style="margin-left: 10px;">Login</button>
     }
 </header>
 
@@ -24,10 +24,14 @@
         Console.WriteLine("Logout button clicked!");
         UserSessionService.RemoveUserSession(); // Sin argumentos
         Console.WriteLine("User session removed.");
-        ReloadPage();
         Navigation.NavigateTo("/"); // Redirige a la página de inicio
     }
+    private void Login()
+    {
 
+        Console.WriteLine("Login button clicked!");       
+        Navigation.NavigateTo("/"); // Redirige a la página de inicio
+    }
     private bool IsUserLoggedIn()
     {
         var currentSession = UserSessionService.GetCurrentSession();
