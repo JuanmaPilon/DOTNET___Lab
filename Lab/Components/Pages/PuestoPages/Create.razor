@@ -4,6 +4,8 @@
 @inject IDbContextFactory<Lab.Data.LabContext> DbFactory
 @inject NavigationManager NavigationManager
 
+@rendermode InteractiveServer
+
 <PageTitle>Create</PageTitle>
 
 <h1>Create</h1>
@@ -15,6 +17,21 @@
         <EditForm Model="@Puesto" OnValidSubmit="AddPuesto" FormName="create" Enhance>
             <DataAnnotationsValidator />
             <ValidationSummary class="text-danger" />
+
+            <div class="form-group">
+                <label for="oficinaSelect">Selecciona Oficina</label>
+                <select @onchange="OnOficinaSelected" class="form-control" id="oficinaSelect" required>
+                    <option value="">Seleccione una oficina</option>
+                    @foreach (var oficina in Oficinas)
+                    {
+                        <option value="@oficina.idOficina">@oficina.idOficina</option> <!-- Muestra el ID de la oficina -->
+                    }
+                </select>
+                <ValidationMessage For="@(() => Puesto.idOficina)" class="text-danger" />
+            </div>
+
+            <p>Oficina seleccionada: @Puesto.idOficina</p> <!-- Muestra el ID de la oficina seleccionada -->
+
             <button type="submit" class="btn btn-primary">Create</button>
         </EditForm>
     </div>
@@ -25,11 +42,30 @@
 </div>
 
 @code {
-    private Puesto Puesto { get; set; } = new()
-    {
-        idOficina =8
-    };
+    private Puesto Puesto { get; set; } = new() { idOficina = 0 };
+    private List<Oficina> Oficinas { get; set; } = new();
 
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        Oficinas = await context.Oficina.ToListAsync();
+        Console.WriteLine($"Número de oficinas encontradas: {Oficinas.Count}"); // Verifica cuántas oficinas se cargan
+    }
+
+    private void OnOficinaSelected(ChangeEventArgs e)
+    {
+        // Asegúrate de que el valor se esté convirtiendo correctamente
+        if (int.TryParse(e.Value.ToString(), out int selectedId))
+        {
+            Puesto.idOficina = selectedId;
+            Console.WriteLine($"Oficina seleccionada: {Puesto.idOficina}"); // Verifica el valor seleccionado
+            StateHasChanged(); // Asegúrate de que el componente se vuelve a renderizar
+        }
+        else
+        {
+            Console.WriteLine("Error al convertir el ID de la oficina.");
+        }
+    }
 
     private async Task AddPuesto()
     {
@@ -40,7 +76,7 @@
             Console.WriteLine("Error: idOficina no fue seleccionado correctamente.");
             return;
         }
-        
+
         Puesto.Estado = true;
         Puesto.TramiteActual = 0;
 
@@ -58,7 +94,4 @@
         await context.SaveChangesAsync();
         NavigationManager.NavigateTo("/puestos");
     }
-
-
 }
-
