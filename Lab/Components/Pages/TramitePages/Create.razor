@@ -50,7 +50,7 @@
         // Notificar a los clientes conectados al monitor que hay un nuevo trámite
         await TramiteHubContext.Clients.All.SendAsync("ReceiveTramiteUpdate");
 
-        NavigationManager.NavigateTo("/tramites");
+        NavigationManager.NavigateTo("/tramites/create");
     }
 }
 

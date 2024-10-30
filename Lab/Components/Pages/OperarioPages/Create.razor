@@ -4,17 +4,18 @@
 @inject IDbContextFactory<Lab.Data.LabContext> DbFactory
 @inject NavigationManager NavigationManager
 
+@rendermode InteractiveServer
+
 <PageTitle>Create</PageTitle>
 
-<h1>Create</h1>
+<h1>Create Operario</h1>
 
-<h2>Operario</h2>
-<hr />
 <div class="row">
     <div class="col-md-4">
-        <EditForm method="post" Model="Operario" OnValidSubmit="AddOperario" FormName="create" Enhance>
+        <EditForm Model="Operario" OnValidSubmit="AddOperario" FormName="createOperarioForm">
             <DataAnnotationsValidator />
             <ValidationSummary class="text-danger" />
+
             <div class="mb-3">
                 <label for="username" class="form-label">UserName:</label>
                 <InputText id="username" @bind-Value="Operario.Username" class="form-control" />
@@ -26,15 +27,39 @@
                 <ValidationMessage For="() => Operario.Password" class="text-danger" />
             </div>
             <div class="mb-3">
-                <label for="numerooperario" class="form-label">NumeroOperario:</label> 
-                <InputNumber id="numerooperario" @bind-Value="Operario.NumeroOperario" class="form-control" /> 
-                <ValidationMessage For="() => Operario.NumeroOperario" class="text-danger" /> 
-            </div>        
-            <div class="mb-3">
-                <label for="puestoasignadoid" class="form-label">PuestoAsignadoId:</label> 
-                <InputNumber id="puestoasignadoid" @bind-Value="Operario.PuestoAsignadoId" class="form-control" /> 
-                <ValidationMessage For="() => Operario.PuestoAsignadoId" class="text-danger" /> 
+                <label for="numerooperario" class="form-label">NumeroOperario:</label>
+                <InputNumber id="numerooperario" @bind-Value="Operario.NumeroOperario" class="form-control" />
+                <ValidationMessage For="() => Operario.NumeroOperario" class="text-danger" />
             </div>
+
+            <!-- Selector de Oficina -->
+            <div class="mb-3">
+                <label for="oficina" class="form-label">Oficina:</label>
+                <select id="oficina" class="form-select" @onchange="OnOficinaChange">
+                    <option value="">Selecciona una oficina</option>
+                    @foreach (var oficina in OficinasDisponibles)
+                    {
+                        <option value="@oficina.idOficina">@oficina.idOficina</option>
+                    }
+                </select>
+                <ValidationMessage For="() => Operario.PuestoAsignadoId" class="text-danger" />
+            </div>
+
+            <!-- Selector de Puesto (dependiente de la Oficina seleccionada) -->
+            @if (PuestosDisponibles != null && PuestosDisponibles.Any())
+            {
+                <div class="mb-3">
+                    <label for="puesto" class="form-label">Puesto:</label>
+                    <select id="puesto" class="form-select" @bind="Operario.PuestoAsignadoId">
+                        <option value="">Selecciona un puesto</option>
+                        @foreach (var puesto in PuestosDisponibles)
+                        {
+                            <option value="@puesto.NroPuesto">@puesto.NroPuesto</option>
+                        }
+                    </select>
+                    <ValidationMessage For="() => Operario.PuestoAsignadoId" class="text-danger" />
+                </div>
+            }
 
             @if (ErrorMessage != null)
             {
@@ -50,23 +75,38 @@
 </div>
 
 @code {
-    [SupplyParameterFromForm]
     private Operario Operario { get; set; } = new();
-
+    private List<Oficina> OficinasDisponibles = new();
+    private List<Puesto> PuestosDisponibles = new();
     private string? ErrorMessage { get; set; }
 
-    // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        OficinasDisponibles = await context.Oficina.AsNoTracking().ToListAsync();
+    }
+
+    private async Task OnOficinaChange(ChangeEventArgs e)
+    {
+        var selectedOficinaId = int.Parse(e.Value?.ToString() ?? "0");
+        using var context = DbFactory.CreateDbContext();
+        PuestosDisponibles = await context.Puesto
+            .Where(p => p.idOficina == selectedOficinaId) // Sin filtro de estado
+            .AsNoTracking()
+            .ToListAsync();
+    }
+
+
     private async Task AddOperario()
     {
         using var context = DbFactory.CreateDbContext();
         var puestoExistente = await context.Puesto
-        .AsNoTracking() // Evita el seguimiento de cambios si solo estás verificando
-        .FirstOrDefaultAsync(p => p.NroPuesto == Operario.PuestoAsignadoId);
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.NroPuesto == Operario.PuestoAsignadoId);
 
         if (puestoExistente == null)
         {
-            // Si el puesto no existe, muestra un mensaje de error
-            ErrorMessage = "El puesto asignado no existe. Por favor, ingrese un puesto válido.";
+            ErrorMessage = "El puesto asignado no existe o no está disponible.";
             return;
         }
 
