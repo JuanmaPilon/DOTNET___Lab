@@ -89,12 +89,25 @@
     private async Task OnOficinaChange(ChangeEventArgs e)
     {
         var selectedOficinaId = int.Parse(e.Value?.ToString() ?? "0");
+
         using var context = DbFactory.CreateDbContext();
+
+        // obtengo puestos ocupados
+        var puestosOcupados = await context.Operario
+            .Where(o => o.PuestoAsignadoId != null)
+            .Select(o => o.PuestoAsignadoId)
+            .ToListAsync();
+
+        // obtengo los puestos que no estan ocupados
         PuestosDisponibles = await context.Puesto
-            .Where(p => p.idOficina == selectedOficinaId) // Sin filtro de estado
+            .Where(p => p.idOficina == selectedOficinaId && !puestosOcupados.Contains(p.NroPuesto))
             .AsNoTracking()
             .ToListAsync();
+
+        StateHasChanged(); 
     }
+
+
 
 
     private async Task AddOperario()
