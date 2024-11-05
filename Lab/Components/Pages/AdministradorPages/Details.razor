@@ -3,6 +3,7 @@
 @using Lab.Components.Models
 @inject IDbContextFactory<Lab.Data.LabContext> DbFactory
 @inject NavigationManager NavigationManager
+@inject UserSessionService UserSessionService
 
 <PageTitle>Details</PageTitle>
 
@@ -36,6 +37,32 @@
     protected override async Task OnInitializedAsync()
     {
         using var context = DbFactory.CreateDbContext();
+        if (!UserSessionService.IsUserLoggedIn())
+        {
+            NavigationManager.NavigateTo("/");
+            return;
+        }
+
+        // Verificar el rol del usuario
+        if (!UserSessionService.HasRole("Administrador"))
+        {
+            var (username, role) = UserSessionService.GetCurrentSession();
+
+            // Redirigir basado en el rol del usuario
+            switch (role)
+            {
+                case "Operario":
+                    NavigationManager.NavigateTo("/cubiculo");
+                    break;
+                case "GerenteCalidad":
+                    NavigationManager.NavigateTo("/gerente-calidad");
+                    break;
+                default:
+                    NavigationManager.NavigateTo("/");
+                    break;
+            }
+            return;
+        }
         administrador = await context.Administrador.FirstOrDefaultAsync(m => m.Username == Username);
 
         if (administrador is null)

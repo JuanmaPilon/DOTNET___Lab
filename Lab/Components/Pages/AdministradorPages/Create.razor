@@ -3,6 +3,7 @@
 @using Lab.Components.Models
 @inject IDbContextFactory<Lab.Data.LabContext> DbFactory
 @inject NavigationManager NavigationManager
+@inject UserSessionService UserSessionService
 
 <PageTitle>Create</PageTitle>
 
@@ -37,7 +38,37 @@
 @code {
     [SupplyParameterFromForm]
     private Administrador Administrador { get; set; } = new();
+    protected override async Task OnInitializedAsync()
+    {
+        // Verificar si el usuario está logueado
+        if (!UserSessionService.IsUserLoggedIn())
+        {
+            NavigationManager.NavigateTo("/");
+            return;
+        }
 
+        // Verificar el rol del usuario
+        if (!UserSessionService.HasRole("Administrador"))
+        {
+            var (username, role) = UserSessionService.GetCurrentSession();
+
+            // Redirigir basado en el rol del usuario
+            switch (role)
+            {
+                case "Operario":
+                    NavigationManager.NavigateTo("/cubiculo");
+                    break;
+                case "GerenteCalidad":
+                    NavigationManager.NavigateTo("/gerente-calidad");
+                    break;
+                default:
+                    NavigationManager.NavigateTo("/");
+                    break;
+            }
+            return;
+        }
+       
+    }
     // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
     private async Task AddAdministrador()
     {
