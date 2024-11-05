@@ -144,6 +144,24 @@
             .AsNoTracking()
             .FirstOrDefaultAsync(p => p.NroPuesto == Operario.PuestoAsignadoId);
 
+        // Verifica si ya existe un operario con el mismo nombre
+        var operarioExistente = await context.Operario
+            .AsNoTracking()
+            .FirstOrDefaultAsync(o => o.Username == Operario.Username);
+        if (operarioExistente != null)
+        {
+            ErrorMessage = "Ya existe un operario con ese nombre.";
+            return;
+        }
+        // Verifica si ya existe un operario con el mismo nombre
+        var numoperarioExistente = await context.Operario
+            .AsNoTracking()
+            .FirstOrDefaultAsync(o => o.NumeroOperario == Operario.NumeroOperario);
+        if (numoperarioExistente != null)
+        {
+            ErrorMessage = "Ya existe ese numero de operario en el sistema.";
+            return;
+        }
         if (puestoExistente == null)
         {
             ErrorMessage = "El puesto asignado no existe o no está disponible.";

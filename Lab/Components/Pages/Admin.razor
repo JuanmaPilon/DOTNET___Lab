@@ -1,15 +1,51 @@
 ﻿@page "/admin"
 @using Lab.Components.Models
 @inject UserSessionService UserSessionService // Inyección del servicio de sesión
+@using Microsoft.EntityFrameworkCore
+@inject IDbContextFactory<Lab.Data.LabContext> DbFactory
 
+@rendermode InteractiveServer
+<div class="d-flex flex-wrap gap-2 p-3 border rounded bg-light m-3 align-content-center">
 <h3>Admin Page</h3>
 
 <p>Username: @username</p>
 <p>Role: @role</p>
 
+</div>
+<div class="btn-group">
+    <button class="btn btn-secondary btn-lg dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+        Oficinas
+    </button>
+    <ul class="dropdown-menu">
+        @foreach (var oficina in OficinasDisponibles)
+        {
+            <li><a class="dropdown-item" href="#">@oficina.idOficina</a></li>
+        }
+    </ul>
+</div>
+
+<div class="d-flex flex-wrap gap-2 p-3 border rounded bg-light m-3">
+    <NavLink class="btn btn-secondary btn-lg" href="/oficinas">
+        Oficinas
+    </NavLink>
+    <NavLink class="btn btn-secondary btn-lg" href="/puestos">
+        Puestos
+    </NavLink>
+    <NavLink class="btn btn-secondary btn-lg" href="/operarios">
+        Operarios
+    </NavLink>
+    <NavLink class="btn btn-secondary btn-lg" href="/administradors">
+        Administradores
+    </NavLink>
+    <NavLink class="btn btn-secondary btn-lg" href="/gerentes-de-calidad">
+        Gerentes de Calidad
+    </NavLink>
+</div>
+
 @code {
     private string username;
     private string role;
+    private List<Oficina> OficinasDisponibles = new();
 
     protected override void OnInitialized()
     {
@@ -18,5 +54,14 @@
 
         username = session.username ?? "No user";
         role = session.role ?? "No role";
+
+       
     }
+    protected override async Task OnInitializedAsync()
+    {
+        // Cargar las oficinas disponibles si es admin
+        using var context = DbFactory.CreateDbContext();
+        OficinasDisponibles = await context.Oficina.AsNoTracking().ToListAsync();
+    }
+
 }

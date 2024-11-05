@@ -1,4 +1,8 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
+﻿@inject NavigationManager NavigationManager
+@inject UserSessionService UserSessionService
+@rendermode InteractiveServer
+
+<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
         <a class="navbar-brand" href="">Lab</a>
     </div>
@@ -9,27 +13,55 @@
 <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
     <nav class="flex-column">
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+            <button class="nav-link btn btn-link" @onclick="HomeRed">
                 <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
+            </button>
         </div>
 
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
+            <NavLink class="nav-link btn btn-link" href="counter">
                 <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
             </NavLink>
         </div>
 
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
+            <NavLink class="nav-link btn btn-link" href="weather">
                 <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
             </NavLink>
         </div>
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/tramites/create">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Nuevo Tramite
+            <NavLink class="nav-link btn-link" href="/tramites/create">
+                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Nuevo Trámite
             </NavLink>
         </div>
     </nav>
 </div>
 
+@code {
+    private void HomeRed()
+    {
+        Console.WriteLine($"ENTRE");
+        var (username, role) = UserSessionService.GetCurrentSession();
+        // Redirigir basado en el rol del usuario
+        switch (role)
+        {
+            case "Administrador":
+                NavigationManager.NavigateTo("/admin");
+                Console.WriteLine($"Oficina seleccionada: {username}");
+                break;
+            case "Operario":
+                NavigationManager.NavigateTo("/cubiculo");
+                Console.WriteLine($"Oficina seleccionada: {username}");
+                break;
+            case "GerenteCalidad":
+                NavigationManager.NavigateTo("/gerente-calidad");
+                Console.WriteLine($"Oficina seleccionada: {username}");
+                break;
+            default:
+                Console.WriteLine($"Oficina seleccionada: {username}");
+                Console.WriteLine($"Oficina seleccionada: {role}");
+                NavigationManager.NavigateTo("/");
+                break;
+        }
+    }
+}
