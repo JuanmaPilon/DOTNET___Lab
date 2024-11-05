@@ -23,6 +23,35 @@
     private string? username;
     private string? password;
 
+    protected override async Task OnInitializedAsync()
+    {
+        await EnsureAdminUserExists();
+    }
+
+    private async Task EnsureAdminUserExists()
+    {
+        using var context = await DbFactory.CreateDbContextAsync();
+
+        // Verifica si ya existe un usuario con rol "Administrador"
+        bool adminExists = await context.Usuario.OfType<Administrador>()
+            .AnyAsync(u => u.Username == "admin");
+
+        if (!adminExists)
+        {
+            // Crea un nuevo administrador con el username y contraseña "admin"
+            var adminUser = new Administrador
+                {
+                    Username = "admin",
+                    Password = "admin"
+                };
+
+            context.Usuario.Add(adminUser);
+            await context.SaveChangesAsync();
+
+            Console.WriteLine("Usuario administrador creado con éxito.");
+        }
+    }
+
     private async Task Login()
     {
         Console.WriteLine("Login button clicked!");

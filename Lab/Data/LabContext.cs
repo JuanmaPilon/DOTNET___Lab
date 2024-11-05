@@ -40,5 +40,6 @@ namespace Lab.Data
 
             base.OnModelCreating(modelBuilder);
         }
+        public DbSet<Lab.Components.Models.Administrador> Administrador { get; set; } = default!;
     }
 }

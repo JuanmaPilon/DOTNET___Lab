@@ -1,0 +1,89 @@
+﻿@page "/administradors/edit"
+@using Microsoft.EntityFrameworkCore
+@using Lab.Components.Models
+@inject IDbContextFactory<Lab.Data.LabContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Edit</PageTitle>
+
+<h1>Edit</h1>
+
+<h2>Administrador</h2>
+<hr />
+@if (Administrador is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-4">
+            <EditForm method="post" Model="Administrador" OnValidSubmit="UpdateAdministrador" FormName="edit" Enhance>
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <input type="hidden" name="Administrador.Username" value="@Administrador.Username" />
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password:</label>
+                    <InputText id="password" @bind-Value="Administrador.Password" class="form-control" />
+                    <ValidationMessage For="() => Administrador.Password" class="text-danger" />
+                </div>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+<div>
+    <a href="/administradors">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    private string Username { get; set; }
+
+    [SupplyParameterFromForm]
+    private Administrador? Administrador { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        Administrador ??= await context.Administrador.FirstOrDefaultAsync(m => m.Username == Username);
+
+        if (Administrador is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    // To protect from overposting attacks, enable the specific properties you want to bind to.
+    // For more information, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    private async Task UpdateAdministrador()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Attach(Administrador!).State = EntityState.Modified;
+
+        try
+        {
+            await context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!AdministradorExists(Administrador!.Username))
+            {
+                NavigationManager.NavigateTo("notfound");
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+        NavigationManager.NavigateTo("/administradors");
+    }
+
+    private bool AdministradorExists(string username)
+    {
+        using var context = DbFactory.CreateDbContext();
+        return context.Administrador.Any(e => e.Username == username);
+    }
+}

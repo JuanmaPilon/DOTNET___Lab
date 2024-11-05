@@ -1,0 +1,46 @@
+﻿@page "/administradors/details"
+@using Microsoft.EntityFrameworkCore
+@using Lab.Components.Models
+@inject IDbContextFactory<Lab.Data.LabContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Details</PageTitle>
+
+<h1>Details</h1>
+
+<div>
+    <h2>Administrador</h2>
+    <hr />
+    @if (administrador is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+        <dl class="row">
+            <dt class="col-sm-2">Password</dt>
+            <dd class="col-sm-10">@administrador.Password</dd>
+        </dl>
+        <div>
+            <a href="@($"/administradors/edit?username={administrador.Username}")">Edit</a> |
+            <a href="@($"/administradors")">Back to List</a>
+        </div>
+    }
+</div>
+
+@code {
+    private Administrador? administrador;
+
+    [SupplyParameterFromQuery]
+    private string Username { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        administrador = await context.Administrador.FirstOrDefaultAsync(m => m.Username == Username);
+
+        if (administrador is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+}
