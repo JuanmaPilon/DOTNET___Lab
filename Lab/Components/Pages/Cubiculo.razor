@@ -44,6 +44,7 @@
     private Puesto puesto;  // hay que buscar el puesto asignado al operario
     private Tramite tramiteActual;  // Buscar el trámite actual asignado al puesto
     private bool esTramiteActivo; // Controla si el trámite actual está activo
+    private int oficinaId;
 
     protected override async Task OnInitializedAsync()
     {
@@ -77,6 +78,7 @@
 
                 if (puesto != null)
                 {
+                    oficinaId = puesto.idOficina;
                     // Obtener el trámite actual del puesto
                     tramiteActual = await context.Tramite.FirstOrDefaultAsync(t => t.NroPuesto == puesto.NroPuesto.ToString());
 
@@ -144,8 +146,10 @@
             {
                 using var context = await DbFactory.CreateDbContextAsync();
 
+                // Filtrar los trámites sin puesto que sean de la oficina del operario
                 var tramitesSinPuesto = await context.Tramite
-                    .Where(t => t.NroPuesto == null || t.NroPuesto == "--" || t.NroPuesto == "")
+                    .Where(t => (t.NroPuesto == null || t.NroPuesto == "--" || t.NroPuesto == "")
+                                && t.idOficina == oficinaId) 
                     .ToListAsync();
 
                 if (tramitesSinPuesto.Any())
@@ -155,10 +159,9 @@
                     if (siguienteTramite != null)
                     {
                         siguienteTramite.NroPuesto = puesto.NroPuesto.ToString();
-
                         puesto.TramiteActual = siguienteTramite.NroTramite;
+                        
                         context.Puesto.Update(puesto);
-
                         context.Tramite.Update(siguienteTramite);
                         await context.SaveChangesAsync();
 
@@ -189,6 +192,7 @@
             Console.WriteLine("Error: No hay puesto asignado para este operario.");
         }
     }
+
 
     private async Task LlamarDeNuevo()
     {
