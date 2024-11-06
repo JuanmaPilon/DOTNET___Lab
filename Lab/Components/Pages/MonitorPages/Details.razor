@@ -1,0 +1,46 @@
+﻿@page "/monitors/details"
+@using Microsoft.EntityFrameworkCore
+@using Lab.Components.Models
+@inject IDbContextFactory<Lab.Data.LabContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Details</PageTitle>
+
+<h1>Details</h1>
+
+<div>
+    <h2>Monitor</h2>
+    <hr />
+    @if (monitor is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+        <dl class="row">
+            <dt class="col-sm-2">idOficina</dt>
+            <dd class="col-sm-10">@monitor.idOficina</dd>
+        </dl>
+        <div>
+            <a href="@($"/monitors/edit?idmonitor={monitor.idMonitor}")">Edit</a> |
+            <a href="@($"/monitors")">Back to List</a>
+        </div>
+    }
+</div>
+
+@code {
+    private Monitor? monitor;
+
+    [SupplyParameterFromQuery]
+    private int idMonitor { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        monitor = await context.Monitor.FirstOrDefaultAsync(m => m.idMonitor == idMonitor);
+
+        if (monitor is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+}

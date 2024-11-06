@@ -91,8 +91,24 @@
     private async Task AddOficina()
     {
         using var context = DbFactory.CreateDbContext();
-        context.Oficina.Add(Oficina);
+        context.Oficina.Add(Oficina);  
+        await context.SaveChangesAsync();  
+
+        // Obtener el ID de la oficina recién creada
+        var oficinaId = Oficina.idOficina;
+
+        // Crear un nuevo monitor asociado a la oficina recién creada
+        var monitor = new Monitor
+            {
+                idOficina = oficinaId  // Solo asociar la oficina, no asignar IdMonitor
+            };
+
+        // Agregar el monitor a la base de datos
+        context.Monitor.Add(monitor);
+        
         await context.SaveChangesAsync();
         NavigationManager.NavigateTo("/oficinas");
+
+
     }
 }

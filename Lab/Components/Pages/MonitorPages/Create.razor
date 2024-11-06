@@ -1,0 +1,44 @@
+﻿@page "/monitors/create"
+@using Microsoft.EntityFrameworkCore
+@using Lab.Components.Models
+@inject IDbContextFactory<Lab.Data.LabContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Create</PageTitle>
+
+<h1>Create</h1>
+
+<h2>Monitor</h2>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <EditForm method="post" Model="Monitor" OnValidSubmit="AddMonitor" FormName="create" Enhance>
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" />
+            <div class="mb-3">
+                <label for="idoficina" class="form-label">idOficina:</label> 
+                <InputNumber id="idoficina" @bind-Value="Monitor.idOficina" class="form-control" /> 
+                <ValidationMessage For="() => Monitor.idOficina" class="text-danger" /> 
+            </div>        
+            <button type="submit" class="btn btn-primary">Create</button>
+        </EditForm>
+    </div>
+</div>
+
+<div>
+    <a href="/monitors">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromForm]
+    private Monitor Monitor { get; set; } = new();
+
+    // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    private async Task AddMonitor()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Monitor.Add(Monitor);
+        await context.SaveChangesAsync();
+        NavigationManager.NavigateTo("/monitors");
+    }
+}

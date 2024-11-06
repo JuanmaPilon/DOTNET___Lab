@@ -1,4 +1,4 @@
-﻿@page "/monitor"
+﻿@page "/monitorAdmin"
 @using Lab.Components.Models
 @using Microsoft.EntityFrameworkCore
 @inject IDbContextFactory<Lab.Data.LabContext> DbFactory
@@ -19,6 +19,7 @@
                 <th>Nro Puesto</th>
                 <th>Fecha Inicio</th>
                 <th>Fecha Fin</th>
+                <th>Oficina</th>
             </tr>
         </thead>
         <tbody>
@@ -30,6 +31,7 @@
                     <td>@tramite.NroPuesto</td>
                     <td>@tramite.FechaInicio.ToShortDateString()</td>
                     <td>@(tramite.FechaFin?.ToShortDateString() ?? "--/--/--")</td>
+                    <td>@tramite.idOficina</td>
                 </tr>
             }
         </tbody>
