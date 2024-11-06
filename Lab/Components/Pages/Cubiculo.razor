@@ -12,28 +12,34 @@
 @implements IAsyncDisposable
 @inject IJSRuntime JSRuntime
 
-
 <h3>Cubiculo</h3>
 
 <div>
-    @if (tramiteActual != null)
+    @if (isPageInitialized)
     {
-        <div>
-            <p>Username: @username</p>
-            <p>Role: @role</p>
-        </div>
-        <div>
-            <p>Trámite actual: @tramiteActual.NroTramite</p>
-            <p>Fecha de inicio: @tramiteActual.FechaInicio.ToString("dd/MM/yyyy")</p>
-        </div>
-        <button class="btn btn-success" @onclick="TerminarTramite">Terminar Trámite</button>
-        <button class="btn btn-primary" @onclick="SiguienteTramite" disabled="@(esTramiteActivo)">Siguiente Trámite</button>
-        <button class="btn btn-warning" @onclick="LlamarDeNuevo">Llamar de nuevo</button>
+        @if (tramiteActual != null)
+        {
+            <div>
+                <p>Username: @username</p>
+                <p>Role: @role</p>
+            </div>
+            <div>
+                <p>Trámite actual: @tramiteActual.NroTramite</p>
+                <p>Fecha de inicio: @tramiteActual.FechaInicio.ToString("dd/MM/yyyy")</p>
+            </div>
+            <button class="btn btn-success" @onclick="TerminarTramite">Terminar Trámite</button>
+            <button class="btn btn-primary" @onclick="SiguienteTramite" disabled="@(esTramiteActivo)">Siguiente Trámite</button>
+            <button class="btn btn-warning" @onclick="LlamarDeNuevo">Llamar de nuevo</button>
+        }
+        else
+        {
+            <p>No hay trámite asignado actualmente.</p>
+            <button class="btn btn-primary" @onclick="SiguienteTramite" disabled="@(esTramiteActivo)">Siguiente Trámite</button>
+        }
     }
     else
     {
-        <p>No hay trámite asignado actualmente.</p>
-        <button class="btn btn-primary" @onclick="SiguienteTramite" disabled="@(esTramiteActivo)">Siguiente Trámite</button>
+        <p>Cargando...</p>
     }
 </div>
 
@@ -44,6 +50,7 @@
     private Puesto puesto;  // hay que buscar el puesto asignado al operario
     private Tramite tramiteActual;  // Buscar el trámite actual asignado al puesto
     private bool esTramiteActivo; // Controla si el trámite actual está activo
+    private bool isPageInitialized = false; // Nueva bandera para indicar la carga inicial
     private int oficinaId;
 
     protected override async Task OnInitializedAsync()
@@ -79,8 +86,12 @@
                 if (puesto != null)
                 {
                     oficinaId = puesto.idOficina;
-                    // Obtener el trámite actual del puesto
-                    tramiteActual = await context.Tramite.FirstOrDefaultAsync(t => t.NroPuesto == puesto.NroPuesto.ToString());
+
+                    // Obtener el trámite actual solo si pertenece a la oficina del operario y no tiene fecha de finalización
+                    tramiteActual = await context.Tramite
+                        .FirstOrDefaultAsync(t => t.NroPuesto == puesto.NroPuesto.ToString()
+                                                  && t.idOficina == oficinaId
+                                                  && t.FechaFin == null);
 
                     // Determinar si hay un trámite activo (para habilitar/deshabilitar el botón)
                     esTramiteActivo = tramiteActual != null;
@@ -92,12 +103,12 @@
                 }
                 else
                 {
-                    
-
                     Console.WriteLine("Error: No se encontró un puesto asignado para este operario.");
                 }
             }
         }
+        isPageInitialized = true; // Se marca como cargada la página
+        StateHasChanged();
     }
 
     public async ValueTask DisposeAsync()
@@ -146,10 +157,11 @@
             {
                 using var context = await DbFactory.CreateDbContextAsync();
 
-                // Filtrar los trámites sin puesto que sean de la oficina del operario
+                // Filtrar los trámites sin puesto que sean de la oficina del operario y sin fecha de finalización
                 var tramitesSinPuesto = await context.Tramite
                     .Where(t => (t.NroPuesto == null || t.NroPuesto == "--" || t.NroPuesto == "")
-                                && t.idOficina == oficinaId) 
+                                && t.idOficina == oficinaId
+                                && t.FechaFin == null)
                     .ToListAsync();
 
                 if (tramitesSinPuesto.Any())
@@ -160,7 +172,7 @@
                     {
                         siguienteTramite.NroPuesto = puesto.NroPuesto.ToString();
                         puesto.TramiteActual = siguienteTramite.NroTramite;
-                        
+
                         context.Puesto.Update(puesto);
                         context.Tramite.Update(siguienteTramite);
                         await context.SaveChangesAsync();
@@ -193,7 +205,6 @@
         }
     }
 
-
     private async Task LlamarDeNuevo()
     {
         if (tramiteActual != null)
@@ -207,5 +218,5 @@
             Console.WriteLine("Error: No hay trámite asignado para llamar de nuevo.");
         }
     }
-
 }
+
