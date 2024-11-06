@@ -71,6 +71,18 @@
         context.Tramite.Add(Tramite);
         await context.SaveChangesAsync();
 
+         
+
+        // Enviar a los monitores de la oficina que corresponda
+        await TramiteHubContext.Clients
+            .Group($"Oficina_{OficinaId}")  
+            .SendAsync("ReceiveTramiteUpdate", new
+            {
+                NroTramite = Tramite.NroTramite,
+                CedulaCliente = Tramite.CedulaCliente,
+               
+            });
+
         // Notificar a los clientes conectados al monitor que hay un nuevo trámite
         await TramiteHubContext.Clients.All.SendAsync("ReceiveTramiteUpdate");
 

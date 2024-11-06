@@ -1,36 +1,90 @@
-﻿@page "/monitors"
-@using Microsoft.EntityFrameworkCore
-@using Microsoft.AspNetCore.Components.QuickGrid
-@using Lab.Components.Models
-@using Lab.Data
+﻿@page "/monitors/{oficinaId:int}"
+@using Microsoft.AspNetCore.SignalR.Client
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JS
 @implements IAsyncDisposable
+@using Microsoft.EntityFrameworkCore
 @inject IDbContextFactory<Lab.Data.LabContext> DbFactory
+@using Lab.Components.Models
+@rendermode InteractiveServer
 
 <PageTitle>Index</PageTitle>
 
-<h1>Index</h1>
+<h1>Monitor - Oficina @OficinaId </h1>
 
-<p>
-    <a href="monitors/create">Create New</a>
-</p>
-
-<QuickGrid Class="table" Items="context.Monitor">
-    <PropertyColumn Property="monitor => monitor.idOficina" />
-
-    <TemplateColumn Context="monitor">
-        <a href="@($"monitors/edit?idmonitor={monitor.idMonitor}")">Edit</a> |
-        <a href="@($"monitors/details?idmonitor={monitor.idMonitor}")">Details</a> |
-        <a href="@($"monitors/delete?idmonitor={monitor.idMonitor}")">Delete</a>
-    </TemplateColumn>
-</QuickGrid>
+@if (TramitesActivos != null && TramitesActivos.Count > 0)
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Nro Trámite</th>
+                <th>Cédula Cliente</th>
+                <th>Nro Puesto</th>                             
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var tramite in TramitesActivos)
+            {
+                <tr class="@(tramiteResaltadoId == tramite.NroTramite ? "table-warning" : "")">
+                    <td>@tramite.NroTramite</td>
+                    <td>@tramite.CedulaCliente</td>
+                    <td>@tramite.NroPuesto</td>                                       
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>No hay trámites activos.</p>
+}
 
 @code {
-    private LabContext context = default!;
+    [Parameter] public int OficinaId { get; set; }
 
-    protected override void OnInitialized()
+    private List<Tramite> TramitesActivos { get; set; } = new();
+    private HubConnection hubConnection;
+    private int? tramiteResaltadoId; // ID del trámite a resaltar
+
+    protected override async Task OnInitializedAsync()
     {
-        context = DbFactory.CreateDbContext();
+        await LoadTramites();
+
+        // Configurar conexión de SignalR
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(NavigationManager.ToAbsoluteUri("/tramiteHub"))
+            .Build();
+
+        // Escuchar el evento "ReceiveTramiteUpdate" para recargar trámites activos
+        hubConnection.On("ReceiveTramiteUpdate", async () =>
+        {
+            await LoadTramites();  // Recargar trámites
+            await InvokeAsync(StateHasChanged); // Asegurar actualización de la UI en el Dispatcher
+        });
+
+        // Escuchar el evento "ReceiveLlamarDeNuevo" para resaltar un trámite específico
+        hubConnection.On<int>("ReceiveLlamarDeNuevo", (nroTramite) =>
+        {
+            tramiteResaltadoId = nroTramite;  // Asignar el ID del trámite a resaltar
+            InvokeAsync(StateHasChanged); // Usar InvokeAsync para actualizar la UI en el hilo correcto
+        });
+
+        await hubConnection.StartAsync();
     }
 
-    public async ValueTask DisposeAsync() => await context.DisposeAsync();
+    private async Task LoadTramites()
+    {
+        using var context = await DbFactory.CreateDbContextAsync();
+        TramitesActivos = await context.Tramite
+            .Where(t => t.idOficina == OficinaId && t.FechaFin == null)  // Filtrar por el ID de la oficina y FechaFin nula
+            .ToListAsync();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null)
+        {
+            await hubConnection.DisposeAsync();
+        }
+    }
 }

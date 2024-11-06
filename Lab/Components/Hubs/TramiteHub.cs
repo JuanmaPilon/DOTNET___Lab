@@ -10,4 +10,5 @@ namespace Lab.Components.Hubs
             await Clients.All.SendAsync("ReceiveTramiteUpdate");
         }
     }
+
 }
