@@ -14,5 +14,9 @@ namespace Lab.Components.Models
         public String NroPuesto { get; set; }
         public DateTime FechaInicio { get; set; }
         public DateTime? FechaFin { get; set; }
+
+        // Clave foránea a Oficina
+        [ForeignKey("Oficina")]
+        public int idOficina { get; set; }
     }
 }

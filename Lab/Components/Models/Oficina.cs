@@ -9,7 +9,8 @@ namespace Lab.Components.Models
         public int idOficina { get; set; }
         public List<Puesto>? ListaPuestos { get; set; } = new List<Puesto>();
 
-
+        public String Nombre { get; set; }
+        public String Ubicacion { get; set; }
         public void ObtenerEstadisticas() { }
 
         public void ActualizarMonitores(int nroTramite) { }

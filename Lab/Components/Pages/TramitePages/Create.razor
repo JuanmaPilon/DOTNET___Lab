@@ -1,4 +1,4 @@
-﻿@page "/tramites/create"
+﻿@page "/tramites/create/{oficinaId:int}"
 @using Microsoft.EntityFrameworkCore
 @using Lab.Components.Models
 @using Lab.Components.Hubs
@@ -6,6 +6,7 @@
 @inject NavigationManager NavigationManager
 @using Microsoft.AspNetCore.SignalR
 @inject IHubContext<Lab.Components.Hubs.TramiteHub> TramiteHubContext
+@inject IJSRuntime JS
 
 <PageTitle>Create</PageTitle>
 
@@ -25,6 +26,11 @@
             </div>
             <button type="submit" class="btn btn-primary">Create</button>
         </EditForm>
+
+        @if (ErrorMessage != null)
+        {
+            <div class="alert alert-danger">@ErrorMessage</div>
+        }
     </div>
 </div>
 
@@ -33,24 +39,41 @@
 </div>
 
 @code {
+    [Parameter] public int OficinaId { get; set; }
+
     [SupplyParameterFromForm]
     private Tramite Tramite { get; set; } = new();
 
+    private string? ErrorMessage { get; set; }
+
     private async Task AddTramite()
     {
-        // Asignar valores predeterminados en el backend
-        Tramite.NroPuesto = "--";             // Valor predeterminado
-        Tramite.FechaInicio = DateTime.Now;   // Fecha actual
-        Tramite.FechaFin = null;              // No se establece fecha de fin
-
         using var context = DbFactory.CreateDbContext();
+
+        // Verifica si ya existe la CI
+        var operarioExistente = await context.Tramite
+            .AsNoTracking()
+            .FirstOrDefaultAsync(o => o.CedulaCliente == Tramite.CedulaCliente);
+
+        if (operarioExistente != null)
+        {
+            ErrorMessage = "Ya existe un operario con esa cédula.";
+            StateHasChanged(); // Actualiza la vista para mostrar el mensaje de error
+            return;
+        }
+
+        // Asignar valores predeterminados en el backend
+        Tramite.NroPuesto = "--";
+        Tramite.FechaInicio = DateTime.Now;
+        Tramite.FechaFin = null;
+        Tramite.idOficina = OficinaId;
+
         context.Tramite.Add(Tramite);
         await context.SaveChangesAsync();
 
         // Notificar a los clientes conectados al monitor que hay un nuevo trámite
         await TramiteHubContext.Clients.All.SendAsync("ReceiveTramiteUpdate");
 
-        NavigationManager.NavigateTo("/tramites/create");
+        NavigationManager.NavigateTo($"/tramites/create/{OficinaId}");
     }
 }
-

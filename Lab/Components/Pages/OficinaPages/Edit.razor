@@ -4,6 +4,7 @@
 @inject IDbContextFactory<Lab.Data.LabContext> DbFactory
 @inject NavigationManager NavigationManager
 @inject UserSessionService UserSessionService
+@rendermode InteractiveServer
 
 <PageTitle>Edit</PageTitle>
 
@@ -22,6 +23,37 @@ else
             <EditForm method="post" Model="Oficina" OnValidSubmit="UpdateOficina" FormName="edit" Enhance>
                 <DataAnnotationsValidator />
                 <ValidationSummary />
+                <div class="mb-3">
+                    <label for="nombre" class="form-label">Nombre:</label>
+                    <InputText id="nombre" @bind-Value="Oficina.Nombre" class="form-control" />
+                    <ValidationMessage For="() => Oficina.Nombre" class="text-danger" />
+                </div>
+
+                <div class="mb-3">
+                    <select id="ubicacion" @bind="Oficina.Ubicacion" class="form-select" aria-label="Default select example">
+                        <option selected>Ubicacion</option>
+                        <option value="Artigas">Artigas</option>
+                        <option value="Canelones">Canelones</option>
+                        <option value="Cerro Largo">Cerro Largo </option>
+                        <option value="Colonia">Colonia </option>
+                        <option value="Durazno">Durazno</option>
+                        <option value="Flores">Flores</option>
+                        <option value="Florida">Florida</option>
+                        <option value="Lavalleja">Lavalleja</option>
+                        <option value="Maldonado"> Maldonado</option>
+                        <option value="Montevideo">Montevideo</option>
+                        <option value="Paysandu">Paysandu</option>
+                        <option value="Río Negro">Río Negro</option>
+                        <option value="Rivera">Rivera</option>
+                        <option value="Rocha">Rocha</option>
+                        <option value="Salto">Salto</option>
+                        <option value="San Jose">San Jose</option>
+                        <option value="Soriano">Soriano</option>
+                        <option value="Tacuarembo">Tacuarembo</option>
+                        <option value="Treinta y Tres">Treinta y Tres</option>
+                    </select>
+                </div>
+
                 <input type="hidden" name="Oficina.idOficina" value="@Oficina.idOficina" />
                 <button type="submit" class="btn btn-primary">Save</button>
             </EditForm>

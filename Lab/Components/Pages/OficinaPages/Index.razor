@@ -19,6 +19,8 @@
 
 <QuickGrid Class="table" Items="context.Oficina">
     <PropertyColumn Property="Oficina => Oficina.idOficina " Title="Id de oficina" />
+    <PropertyColumn Property="Oficina => Oficina.Nombre " Title="Nombre de oficina" />
+    <PropertyColumn Property="Oficina => Oficina.Ubicacion " Title="Ubicacion de oficina" />
     <TemplateColumn Context="oficina">
         <a href="@($"oficinas/edit?idoficina={oficina.idOficina}")">Edit</a> |
         <a href="@($"oficinas/details?idoficina={oficina.idOficina}")">Details</a> |

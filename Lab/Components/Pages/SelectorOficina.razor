@@ -1,0 +1,82 @@
+﻿@page "/selectorOficina"
+@using Microsoft.EntityFrameworkCore
+@using Lab.Components.Models
+@inject IDbContextFactory<Lab.Data.LabContext> DbFactory
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
+<h3>SelectorOficina</h3>
+
+<div class="mb-3">
+    <select id="ubicacion" class="form-select" @onchange="OnOficinaChange" aria-label="Default select example">
+        <option selected>Ubicacion</option>
+        <option value="Artigas">Artigas</option>
+        <option value="Canelones">Canelones</option>
+        <option value="Cerro Largo">Cerro Largo</option>
+        <option value="Colonia">Colonia</option>
+        <option value="Durazno">Durazno</option>
+        <option value="Flores">Flores</option>
+        <option value="Florida">Florida</option>
+        <option value="Lavalleja">Lavalleja</option>
+        <option value="Maldonado">Maldonado</option>
+        <option value="Montevideo">Montevideo</option>
+        <option value="Paysandu">Paysandu</option>
+        <option value="Río Negro">Río Negro</option>
+        <option value="Rivera">Rivera</option>
+        <option value="Rocha">Rocha</option>
+        <option value="Salto">Salto</option>
+        <option value="San Jose">San Jose</option>
+        <option value="Soriano">Soriano</option>
+        <option value="Tacuarembo">Tacuarembo</option>
+        <option value="Treinta y Tres">Treinta y Tres</option>
+    </select>
+</div>
+
+<button class="btn btn-secondary btn-lg" type="button" aria-expanded="false" @onclick="ShowOficinas">
+    Mostrar Oficinas
+</button>
+
+@if (OficinasDisponibles.Any())
+{
+    <h4>Oficinas disponibles en @Oficina.Ubicacion:</h4>
+    <ul>
+        @foreach (var oficina in OficinasDisponibles)
+        {
+            <button class="btn btn-primary" @onclick="() => NavigateToCreateTramite(oficina.idOficina)">
+                @oficina.Nombre
+            </button>
+        }
+    </ul>
+}
+
+@code {
+    private List<Oficina> OficinasDisponibles = new();
+    private Oficina Oficina { get; set; } = new();
+
+    private async Task OnOficinaChange(ChangeEventArgs e)
+    {
+        Oficina.Ubicacion = e.Value?.ToString(); // Asigna la ubicación seleccionada
+        await LoadOficinasByUbicacion(Oficina.Ubicacion); // Carga las oficinas disponibles
+    }
+
+    private async Task LoadOficinasByUbicacion(string ubicacion)
+    {
+        using var context = DbFactory.CreateDbContext();
+
+        // Obtengo las oficinas en la ubicación seleccionada
+        OficinasDisponibles = await context.Oficina // Asegúrate de que "Oficinas" sea el DbSet correcto
+            .Where(o => o.Ubicacion == ubicacion)
+            .ToListAsync();
+    }
+
+    private async Task ShowOficinas()
+    {
+        // Este método se llama al presionar el botón "Mostrar Oficinas"
+        await LoadOficinasByUbicacion(Oficina.Ubicacion);
+    }
+    private void NavigateToCreateTramite(int idOficina)
+    {
+        // Redirige a la página de crear trámite y pasa el id de la oficina como parámetro
+        NavigationManager.NavigateTo($"/tramites/create/{idOficina}");
+    }
+}

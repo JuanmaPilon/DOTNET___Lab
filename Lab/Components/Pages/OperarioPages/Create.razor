@@ -26,12 +26,7 @@
                 <label for="password" class="form-label">Password:</label>
                 <InputText id="password" @bind-Value="Operario.Password" class="form-control" />
                 <ValidationMessage For="() => Operario.Password" class="text-danger" />
-            </div>
-            <div class="mb-3">
-                <label for="numerooperario" class="form-label">NumeroOperario:</label>
-                <InputNumber id="numerooperario" @bind-Value="Operario.NumeroOperario" class="form-control" />
-                <ValidationMessage For="() => Operario.NumeroOperario" class="text-danger" />
-            </div>
+            </div>           
 
             <!-- Selector de Oficina -->
             <div class="mb-3">
@@ -153,7 +148,7 @@
             ErrorMessage = "Ya existe un operario con ese nombre.";
             return;
         }
-        // Verifica si ya existe un operario con el mismo nombre
+        // Verifica si ya existe un operario con el mismo num de operario
         var numoperarioExistente = await context.Operario
             .AsNoTracking()
             .FirstOrDefaultAsync(o => o.NumeroOperario == Operario.NumeroOperario);
@@ -167,7 +162,12 @@
             ErrorMessage = "El puesto asignado no existe o no está disponible.";
             return;
         }
+        // Obtener el próximo número de operario disponible
+        var nextNumeroOperario = await context.Operario
+            .Select(o => o.NumeroOperario)
+            .MaxAsync() + 1; // Sumar uno al máximo existente
 
+        Operario.NumeroOperario = nextNumeroOperario; // Asignar el nuevo número
         context.Operario.Add(Operario);
         await context.SaveChangesAsync();
         NavigationManager.NavigateTo("/operarios");
