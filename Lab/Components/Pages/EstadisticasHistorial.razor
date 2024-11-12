@@ -17,10 +17,34 @@
 
 @rendermode InteractiveServer
 
-<h3>Estadísticas Historial</h3>
+<h3> Filtros </h3>
+<br />
+<div>
+    <!-- Filtros -->
+    <label for="fechaInicio">Fecha de Inicio:</label>
+    <input type="date" id="fechaInicio" @bind="fechaInicio" />
+
+    <label for="fechaFin">Fecha de Fin:</label>
+    <input type="date" id="fechaFin" @bind="fechaFin" />
+
+    <label for="oficina">Oficina:</label>
+    <select id="oficina" class="form-select" @onchange="OnOficinaChange">
+        <option value="">Selecciona una oficina</option>
+        @foreach (var oficina in OficinasDisponibles.Where(o => !string.IsNullOrWhiteSpace(o.Nombre)))
+        {
+            <option value="@oficina.idOficina">@oficina.Nombre</option>
+        }
+    </select>
+
+    <button @onclick="ActualizarFiltros">Actualizar Filtros</button>
+</div>
+<br/>
+<h3> Historial de Trámites </h3>
+<br/>
 
 @if (historial != null && historial.Count > 0)
 {
+    <!-- Tabla de Trámites -->
     <table class="table">
         <thead>
             <tr>
@@ -29,18 +53,24 @@
                 <th>NroPuesto</th>
                 <th>FechaInicio</th>
                 <th>FechaFin</th>
+                <th>Demora</th>
                 <th>Oficina</th>
             </tr>
         </thead>
         <tbody>
             @foreach (var tramite in historial)
             {
+                var demora = tramite.FechaFin.HasValue
+                ? tramite.FechaFin.Value - tramite.FechaInicio
+                : (TimeSpan?)null;
+
                 <tr>
                     <td>@tramite.NroTramite</td>
                     <td>@tramite.CedulaCliente</td>
                     <td>@tramite.NroPuesto</td>
-                    <td>@tramite.FechaInicio.ToString("yyyy-MM-dd")</td>
-                    <td>@tramite.FechaFin?.ToString("yyyy-MM-dd")</td>
+                    <td>@tramite.FechaInicio.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                    <td>@tramite.FechaFin?.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                    <td>@(demora.HasValue ? $"{(int)demora.Value.TotalHours:D2}:{demora.Value.Minutes:D2}:{demora.Value.Seconds:D2}" : "N/A")</td>
                     <td>@tramite.idOficina</td>
                 </tr>
             }
@@ -52,46 +82,20 @@ else
     <p>No hay trámites terminados para mostrar.</p>
 }
 
-<h3>Estadísticas de Trámites Finalizados</h3>
-
-<div>
-    <label for="fechaInicio">Fecha de Inicio:</label>
-    <input type="date" id="fechaInicio" @bind="fechaInicio" />
-
-    <label for="fechaFin">Fecha de Fin:</label>
-    <input type="date" id="fechaFin" @bind="fechaFin" />
-    <select id="oficina" class="form-select" @onchange="OnOficinaChange">
-        <option value="">Selecciona una oficina</option>
-        @foreach (var oficina in OficinasDisponibles.Where(o => !string.IsNullOrWhiteSpace(o.Nombre)))
-        {
-            <option value="@oficina.idOficina">@oficina.Nombre</option>
-        }
-    </select>
-
-
-
-
-    <button @onclick="ActualizarGrafico">Actualizar Gráfico</button>
-</div>
-
+<h3>Trámites por Fechas</h3>
 <Chart Config="_config"></Chart>
-
 @code {
     private List<Tramite> historial;
-
-    private DateTime fechaInicio = DateTime.Now.AddMonths(-1);  
-    private DateTime fechaFin = DateTime.Now;  
-
-    private LineConfig _config;
+    private DateTime fechaInicio = DateTime.Now.AddMonths(-1);
+    private DateTime fechaFin = DateTime.Now;
+    private LineConfig _config;  // Declaramos _config
     private Chart _chart;
     private int? idOficinaSeleccionada;
     private List<Oficina> OficinasDisponibles = new List<Oficina>();
 
-
-
-
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
+        // Inicializar _config aquí
         _config = new LineConfig
             {
                 Options = new LineOptions
@@ -100,7 +104,7 @@ else
                     Title = new OptionsTitle
                     {
                         Display = true,
-                        Text = "ChartJs.Blazor Time Scale Chart"
+                        Text = "Trámites Finalizados"
                     },
                     Tooltips = new Tooltips
                     {
@@ -124,7 +128,7 @@ else
                             },
                             Time = new TimeOptions
                             {
-                                Unit = TimeMeasurement.Day,  
+                                Unit = TimeMeasurement.Day,
                                 TooltipFormat = "ll HH:mm"
                             }
                         }
@@ -142,58 +146,60 @@ else
                     }
                 }
             };
+
+        await CargarOficinasDisponibles();
+        await ActualizarFiltros();  // Asegúrate de cargar datos después de inicializar
     }
 
-    protected override async Task OnInitializedAsync()
-    {
-        await CargarOficinasDisponibles();
-        await CargarHistorialTramites();
-        await CargarDatosGrafico();
-    }
     private async Task CargarOficinasDisponibles()
     {
         using var context = DbFactory.CreateDbContext();
         OficinasDisponibles = await context.Oficina.ToListAsync();
     }
+
     private async Task CargarHistorialTramites()
     {
         using var context = DbFactory.CreateDbContext();
-        historial = await context.Tramite
-            .Where(t => t.FechaFin != null)
-            .ToListAsync();
+        var query = context.Tramite
+            .Where(t => t.FechaFin.HasValue && t.FechaFin >= fechaInicio && t.FechaFin <= fechaFin);
+
+        if (idOficinaSeleccionada.HasValue)
+        {
+            query = query.Where(t => t.idOficina == idOficinaSeleccionada.Value);
+        }
+
+        historial = await query.ToListAsync();
     }
 
     private async Task CargarDatosGrafico()
     {
         var tramites = await ObtenerTramitesFinalizados(fechaInicio, fechaFin);
 
-        
-        _config.Data.Labels.Clear();
-        _config.Data.Datasets.Clear();
-
-        
-        List<DateTime> fechas = GenerarFechasRango(fechaInicio, fechaFin);
-
-        
-        List<int> cantidadTramites = fechas.Select(fecha => tramites.Count(t => t.FechaFin.Value.Date == fecha)).ToList();
-
-        // Añadir las fechas al gráfico
-        foreach (var fecha in fechas)
+        // Asegúrate de que _config no sea null antes de acceder
+        if (_config != null)
         {
-            _config.Data.Labels.Add(fecha.ToString("yyyy-MM-dd"));  
-        }
+            _config.Data.Labels.Clear();
+            _config.Data.Datasets.Clear();
 
-        _config.Data.Datasets.Add(new LineDataset<int>(cantidadTramites)
+            List<DateTime> fechas = GenerarFechasRango(fechaInicio, fechaFin);
+            List<int> cantidadTramites = fechas.Select(fecha => tramites.Count(t => t.FechaFin.Value.Date == fecha)).ToList();
+
+            foreach (var fecha in fechas)
             {
-                Label = "Trámites Finalizados",
-                BorderColor = "rgba(75,192,192,1)",
-                Fill = false
-            });
+                _config.Data.Labels.Add(fecha.ToString("yyyy-MM-dd"));
+            }
 
-        // Actualizar la gráfica solo si _chart no es null
-        if (_chart != null)
-        {
-            await _chart.Update();
+            _config.Data.Datasets.Add(new LineDataset<int>(cantidadTramites)
+                {
+                    Label = "Trámites Finalizados",
+                    BorderColor = "rgba(75,192,192,1)",
+                    Fill = false
+                });
+
+            if (_chart != null)
+            {
+                await _chart.Update();
+            }
         }
     }
 
@@ -206,6 +212,7 @@ else
         }
         return fechas;
     }
+
     private async Task OnOficinaChange(ChangeEventArgs e)
     {
         if (int.TryParse(e.Value?.ToString(), out int oficinaId) && oficinaId > 0)
@@ -216,30 +223,25 @@ else
         {
             idOficinaSeleccionada = null;
         }
-        await ActualizarGrafico();
     }
-
-
 
     private async Task<List<Tramite>> ObtenerTramitesFinalizados(DateTime fechaInicio, DateTime fechaFin)
     {
-        using (var context = DbFactory.CreateDbContext())
+        using var context = DbFactory.CreateDbContext();
+        var query = context.Tramite
+            .Where(t => t.FechaFin.HasValue && t.FechaFin >= fechaInicio && t.FechaFin <= fechaFin);
+
+        if (idOficinaSeleccionada.HasValue)
         {
-            var query = context.Tramite
-                .Where(t => t.FechaFin.HasValue && t.FechaFin >= fechaInicio && t.FechaFin <= fechaFin);
-
-            if (idOficinaSeleccionada.HasValue)
-            {
-                query = query.Where(t => t.idOficina == idOficinaSeleccionada.Value);
-            }
-
-            return await query.ToListAsync();
+            query = query.Where(t => t.idOficina == idOficinaSeleccionada.Value);
         }
+
+        return await query.ToListAsync();
     }
 
-
-    private async Task ActualizarGrafico()
+    private async Task ActualizarFiltros()
     {
+        await CargarHistorialTramites();
         await CargarDatosGrafico();
     }
 }
