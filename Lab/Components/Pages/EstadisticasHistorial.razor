@@ -1,7 +1,204 @@
 ﻿@page "/EstadisticasHistorial"
+@using Lab.Components.Models
+@using Microsoft.EntityFrameworkCore
+@inject IDbContextFactory<Lab.Data.LabContext> DbFactory
 
-<h3>Estadisticas Historial</h3>
+@using ChartJs.Blazor
+@using ChartJs.Blazor.PieChart
+@using ChartJs.Blazor.LineChart
+@using ChartJs.Blazor.Common.Axes
+@using ChartJs.Blazor.Common.Time
+@using ChartJs.Blazor.Common
+@using ChartJs.Blazor.Common.Axes.Ticks
+@using ChartJs.Blazor.Common.Enums
+@using ChartJs.Blazor.Common.Handlers
+@using ChartJs.Blazor.Util
+@using ChartJs.Blazor.Interop
+
+@rendermode InteractiveServer
+
+<h3>Estadísticas Historial</h3>
+
+@if (historial != null && historial.Count > 0)
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>NroTramite</th>
+                <th>CedulaCliente</th>
+                <th>NroPuesto</th>
+                <th>FechaInicio</th>
+                <th>FechaFin</th>
+                <th>Oficina</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var tramite in historial)
+            {
+                <tr>
+                    <td>@tramite.NroTramite</td>
+                    <td>@tramite.CedulaCliente</td>
+                    <td>@tramite.NroPuesto</td>
+                    <td>@tramite.FechaInicio.ToString("yyyy-MM-dd")</td>
+                    <td>@tramite.FechaFin?.ToString("yyyy-MM-dd")</td>
+                    <td>@tramite.idOficina</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>No hay trámites terminados para mostrar.</p>
+}
+
+<h3>Estadísticas de Trámites Finalizados</h3>
+
+<div>
+    <label for="fechaInicio">Fecha de Inicio:</label>
+    <input type="date" id="fechaInicio" @bind="fechaInicio" />
+
+    <label for="fechaFin">Fecha de Fin:</label>
+    <input type="date" id="fechaFin" @bind="fechaFin" />
+
+    <button @onclick="ActualizarGrafico">Actualizar Gráfico</button>
+</div>
+
+<Chart Config="_config"></Chart>
 
 @code {
+    private List<Tramite> historial;
 
+    private DateTime fechaInicio = DateTime.Now.AddMonths(-1);  
+    private DateTime fechaFin = DateTime.Now;  
+
+    private LineConfig _config;
+    private Chart _chart;
+
+    protected override void OnInitialized()
+    {
+        _config = new LineConfig
+            {
+                Options = new LineOptions
+                {
+                    Responsive = true,
+                    Title = new OptionsTitle
+                    {
+                        Display = true,
+                        Text = "ChartJs.Blazor Time Scale Chart"
+                    },
+                    Tooltips = new Tooltips
+                    {
+                        Mode = InteractionMode.Nearest,
+                        Intersect = true
+                    },
+                    Hover = new Hover
+                    {
+                        Mode = InteractionMode.Nearest,
+                        Intersect = true
+                    },
+                    Scales = new Scales
+                    {
+                        XAxes = new List<CartesianAxis>
+                    {
+                        new TimeAxis
+                        {
+                            ScaleLabel = new ScaleLabel
+                            {
+                                LabelString = "Fecha"
+                            },
+                            Time = new TimeOptions
+                            {
+                                Unit = TimeMeasurement.Day,  
+                                TooltipFormat = "ll HH:mm"
+                            }
+                        }
+                    },
+                        YAxes = new List<CartesianAxis>
+                    {
+                        new LinearCartesianAxis
+                        {
+                            ScaleLabel = new ScaleLabel
+                            {
+                                LabelString = "Valor"
+                            }
+                        }
+                    }
+                    }
+                }
+            };
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarHistorialTramites();
+        await CargarDatosGrafico();
+    }
+
+    private async Task CargarHistorialTramites()
+    {
+        using var context = DbFactory.CreateDbContext();
+        historial = await context.Tramite
+            .Where(t => t.FechaFin != null)
+            .ToListAsync();
+    }
+
+    private async Task CargarDatosGrafico()
+    {
+        var tramites = await ObtenerTramitesFinalizados(fechaInicio, fechaFin);
+
+        
+        _config.Data.Labels.Clear();
+        _config.Data.Datasets.Clear();
+
+        
+        List<DateTime> fechas = GenerarFechasRango(fechaInicio, fechaFin);
+
+        
+        List<int> cantidadTramites = fechas.Select(fecha => tramites.Count(t => t.FechaFin.Value.Date == fecha)).ToList();
+
+        // Añadir las fechas al gráfico
+        foreach (var fecha in fechas)
+        {
+            _config.Data.Labels.Add(fecha.ToString("yyyy-MM-dd"));  
+        }
+
+        _config.Data.Datasets.Add(new LineDataset<int>(cantidadTramites)
+            {
+                Label = "Trámites Finalizados",
+                BorderColor = "rgba(75,192,192,1)",
+                Fill = false
+            });
+
+        // Actualizar la gráfica solo si _chart no es null
+        if (_chart != null)
+        {
+            await _chart.Update();
+        }
+    }
+
+    private List<DateTime> GenerarFechasRango(DateTime inicio, DateTime fin)
+    {
+        var fechas = new List<DateTime>();
+        for (var fecha = inicio.Date; fecha <= fin.Date; fecha = fecha.AddDays(1))
+        {
+            fechas.Add(fecha);
+        }
+        return fechas;
+    }
+
+    private async Task<List<Tramite>> ObtenerTramitesFinalizados(DateTime fechaInicio, DateTime fechaFin)
+    {
+        using (var context = DbFactory.CreateDbContext())
+        {
+            return await context.Tramite
+                .Where(t => t.FechaFin.HasValue && t.FechaFin >= fechaInicio && t.FechaFin <= fechaFin)
+                .ToListAsync();
+        }
+    }
+
+    private async Task ActualizarGrafico()
+    {
+        await CargarDatosGrafico();
+    }
 }
