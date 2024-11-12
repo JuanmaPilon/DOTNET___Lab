@@ -1,0 +1,82 @@
+﻿@page "/gerentecalidads/create"
+@using Microsoft.EntityFrameworkCore
+@using Lab.Components.Models
+@inject IDbContextFactory<Lab.Data.LabContext> DbFactory
+@inject NavigationManager NavigationManager
+@inject UserSessionService UserSessionService
+
+<PageTitle>Create</PageTitle>
+
+<h1>Create</h1>
+
+<h2>GerenteCalidad</h2>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <EditForm method="post" Model="GerenteCalidad" OnValidSubmit="AddGerenteCalidad" FormName="create" Enhance>
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" />
+
+            <div class="mb-3">
+                <label for="username" class="form-label">UserName:</label>
+                <InputText id="username" @bind-Value="GerenteCalidad.Username" class="form-control" />
+                <ValidationMessage For="() => GerenteCalidad.Username" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">Password:</label>
+                <InputText id="password" @bind-Value="GerenteCalidad.Password" class="form-control" />
+                <ValidationMessage For="() => GerenteCalidad.Password" class="text-danger" />
+            </div>         
+            
+            <button type="submit" class="btn btn-primary">Create</button>
+        </EditForm>
+    </div>
+</div>
+
+<div>
+    <a href="/gerentecalidads">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromForm]
+    private GerenteCalidad GerenteCalidad { get; set; } = new();
+
+    // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    private async Task AddGerenteCalidad()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.GerenteCalidad.Add(GerenteCalidad);
+        await context.SaveChangesAsync();
+        NavigationManager.NavigateTo("/gerentecalidads");
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        // Verificar si el usuario está logueado
+        if (!UserSessionService.IsUserLoggedIn())
+        {
+            NavigationManager.NavigateTo("/");
+            return;
+        }
+
+        // Verificar el rol del usuario
+        if (!UserSessionService.HasRole("Administrador"))
+        {
+            var (username, role) = UserSessionService.GetCurrentSession();
+
+            // Redirigir basado en el rol del usuario
+            switch (role)
+            {
+                case "Operario":
+                    NavigationManager.NavigateTo("/cubiculo");
+                    break;
+                case "GerenteCalidad":
+                    NavigationManager.NavigateTo("/gerente-calidad");
+                    break;
+                default:
+                    NavigationManager.NavigateTo("/");
+                    break;
+            }
+            return;
+        }
+    }
+}

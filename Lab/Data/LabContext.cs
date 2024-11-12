@@ -42,5 +42,6 @@ namespace Lab.Data
         }
         public DbSet<Lab.Components.Models.Administrador> Administrador { get; set; } = default!;
         public DbSet<Lab.Components.Models.Monitor> Monitor { get; set; } = default!;
+        public DbSet<Lab.Components.Models.GerenteCalidad> GerenteCalidad { get; set; } = default!;
     }
 }

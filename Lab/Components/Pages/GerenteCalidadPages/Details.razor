@@ -1,0 +1,46 @@
+﻿@page "/gerentecalidads/details"
+@using Microsoft.EntityFrameworkCore
+@using Lab.Components.Models
+@inject IDbContextFactory<Lab.Data.LabContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Details</PageTitle>
+
+<h1>Details</h1>
+
+<div>
+    <h2>GerenteCalidad</h2>
+    <hr />
+    @if (gerentecalidad is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+        <dl class="row">
+            <dt class="col-sm-2">Password</dt>
+            <dd class="col-sm-10">@gerentecalidad.Password</dd>
+        </dl>
+        <div>
+            <a href="@($"/gerentecalidads/edit?username={gerentecalidad.Username}")">Edit</a> |
+            <a href="@($"/gerentecalidads")">Back to List</a>
+        </div>
+    }
+</div>
+
+@code {
+    private GerenteCalidad? gerentecalidad;
+
+    [SupplyParameterFromQuery]
+    private string Username { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        gerentecalidad = await context.GerenteCalidad.FirstOrDefaultAsync(m => m.Username == Username);
+
+        if (gerentecalidad is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+}

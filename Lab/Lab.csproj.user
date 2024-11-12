@@ -3,7 +3,7 @@
   <PropertyGroup>
     <ActiveDebugProfile>https</ActiveDebugProfile>
     <_SelectedScaffolderID>BlazorCRUDScaffolder</_SelectedScaffolderID>
-    <_SelectedScaffolderCategoryPath>root/Common/RazorComponent</_SelectedScaffolderCategoryPath>
+    <_SelectedScaffolderCategoryPath>root/Common</_SelectedScaffolderCategoryPath>
     <WebStackScaffolding_ControllerDialogWidth>650</WebStackScaffolding_ControllerDialogWidth>
     <WebStackScaffolding_DbContextDialogWidth>650</WebStackScaffolding_DbContextDialogWidth>
   </PropertyGroup>
