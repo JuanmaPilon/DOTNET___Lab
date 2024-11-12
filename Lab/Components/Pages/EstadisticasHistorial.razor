@@ -60,6 +60,16 @@ else
 
     <label for="fechaFin">Fecha de Fin:</label>
     <input type="date" id="fechaFin" @bind="fechaFin" />
+    <select id="oficina" class="form-select" @onchange="OnOficinaChange">
+        <option value="">Selecciona una oficina</option>
+        @foreach (var oficina in OficinasDisponibles.Where(o => !string.IsNullOrWhiteSpace(o.Nombre)))
+        {
+            <option value="@oficina.idOficina">@oficina.Nombre</option>
+        }
+    </select>
+
+
+
 
     <button @onclick="ActualizarGrafico">Actualizar Gráfico</button>
 </div>
@@ -74,6 +84,11 @@ else
 
     private LineConfig _config;
     private Chart _chart;
+    private int? idOficinaSeleccionada;
+    private List<Oficina> OficinasDisponibles = new List<Oficina>();
+
+
+
 
     protected override void OnInitialized()
     {
@@ -131,10 +146,15 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        await CargarOficinasDisponibles();
         await CargarHistorialTramites();
         await CargarDatosGrafico();
     }
-
+    private async Task CargarOficinasDisponibles()
+    {
+        using var context = DbFactory.CreateDbContext();
+        OficinasDisponibles = await context.Oficina.ToListAsync();
+    }
     private async Task CargarHistorialTramites()
     {
         using var context = DbFactory.CreateDbContext();
@@ -186,16 +206,37 @@ else
         }
         return fechas;
     }
+    private async Task OnOficinaChange(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int oficinaId) && oficinaId > 0)
+        {
+            idOficinaSeleccionada = oficinaId;
+        }
+        else
+        {
+            idOficinaSeleccionada = null;
+        }
+        await ActualizarGrafico();
+    }
+
+
 
     private async Task<List<Tramite>> ObtenerTramitesFinalizados(DateTime fechaInicio, DateTime fechaFin)
     {
         using (var context = DbFactory.CreateDbContext())
         {
-            return await context.Tramite
-                .Where(t => t.FechaFin.HasValue && t.FechaFin >= fechaInicio && t.FechaFin <= fechaFin)
-                .ToListAsync();
+            var query = context.Tramite
+                .Where(t => t.FechaFin.HasValue && t.FechaFin >= fechaInicio && t.FechaFin <= fechaFin);
+
+            if (idOficinaSeleccionada.HasValue)
+            {
+                query = query.Where(t => t.idOficina == idOficinaSeleccionada.Value);
+            }
+
+            return await query.ToListAsync();
         }
     }
+
 
     private async Task ActualizarGrafico()
     {
