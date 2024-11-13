@@ -13,17 +13,6 @@
 <p>Role: @role</p>
 
 </div>
-<div class="btn-group">
-    <button class="btn btn-secondary btn-lg dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-        Oficinas
-    </button>
-    <ul class="dropdown-menu">
-        @foreach (var oficina in OficinasDisponibles)
-        {
-            <li><a class="dropdown-item" href="#">@oficina.idOficina</a></li>
-        }
-    </ul>
-</div>
 
 <div class="d-flex flex-wrap gap-2 p-3 border rounded bg-light m-3">
     <NavLink class="btn btn-secondary btn-lg" href="/oficinas">
@@ -91,8 +80,6 @@
             }
             return;
         }
-        using var context = DbFactory.CreateDbContext();
-        OficinasDisponibles = await context.Oficina.AsNoTracking().ToListAsync();
     }
 
 }
