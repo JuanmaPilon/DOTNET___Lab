@@ -4,6 +4,7 @@
 @inject IDbContextFactory<Lab.Data.LabContext> DbFactory
 @using Microsoft.AspNetCore.SignalR.Client
 @inject NavigationManager Navigation
+@inject UserSessionService UserSessionService
 
 @rendermode InteractiveServer
 
@@ -49,6 +50,34 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        // Cargar las oficinas disponibles si es admin
+        if (!UserSessionService.IsUserLoggedIn())
+        {
+            Navigation.NavigateTo("/");
+            return;
+        }
+
+        // Verificar el rol del usuario
+        var (username, role) = UserSessionService.GetCurrentSession();
+
+        if (role != "Administrador")
+        {
+            // Redirigir basado en el rol del usuario
+            switch (role)
+            {
+                case "GerenteCalidad":
+                    Navigation.NavigateTo("/gerente-calidad");
+                    break;
+                case "Operario":
+                    Navigation.NavigateTo("/cubiculo");
+                    break;
+                default:
+                    Navigation.NavigateTo("/");
+                    break;
+            }
+            return;
+        }
+
         await LoadTramites();
 
         // Configurar conexión de SignalR
@@ -86,4 +115,6 @@ else
             await hubConnection.DisposeAsync();
         }
     }
+
+
 }

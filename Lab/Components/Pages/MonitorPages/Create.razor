@@ -3,6 +3,7 @@
 @using Lab.Components.Models
 @inject IDbContextFactory<Lab.Data.LabContext> DbFactory
 @inject NavigationManager NavigationManager
+@inject UserSessionService UserSessionService
 
 <PageTitle>Create</PageTitle>
 
@@ -40,5 +41,35 @@
         context.Monitor.Add(Monitor);
         await context.SaveChangesAsync();
         NavigationManager.NavigateTo("/monitors");
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        // Cargar las oficinas disponibles si es admin
+        if (!UserSessionService.IsUserLoggedIn())
+        {
+            NavigationManager.NavigateTo("/");
+            return;
+        }
+
+        // Verificar el rol del usuario
+        var (username, role) = UserSessionService.GetCurrentSession();
+
+        if (role != "Administrador")
+        {
+            // Redirigir basado en el rol del usuario
+            switch (role)
+            {
+                case "GerenteCalidad":
+                    NavigationManager.NavigateTo("/gerente-calidad");
+                    break;
+                case "Operario":
+                    NavigationManager.NavigateTo("/cubiculo");
+                    break;
+                default:
+                    NavigationManager.NavigateTo("/");
+                    break;
+            }
+            return;
+        }       
     }
 }
