@@ -4,10 +4,46 @@
 @using Microsoft.EntityFrameworkCore
 @using Lab.Data
 @inject IDbContextFactory<Lab.Data.LabContext> DbFactory
+@using Microsoft.AspNetCore.SignalR
+@using Microsoft.AspNetCore.SignalR.Client
+@inject IHubContext<Lab.Components.Hubs.TramiteHub> TramiteHubContext
 
 @rendermode InteractiveServer
 
+@using ChartJs.Blazor
+@using ChartJs.Blazor.BarChart
+@using ChartJs.Blazor.Common.Axes
+@using ChartJs.Blazor.Common
+@using ChartJs.Blazor.Common.Axes.Ticks
+@using ChartJs.Blazor.Common.Enums
+@using ChartJs.Blazor.Common.Handlers
+@using ChartJs.Blazor.Util
+@using ChartJs.Blazor.Interop
+
+@using System.Linq
+
 <h3>Estadisticas Tiempo Real</h3>
+
+<div>
+    <h4>Trámites por Oficina</h4>
+    <ul>
+        @if (tramitesPorOficina != null)
+        {
+            @foreach (var oficina in tramitesPorOficina)
+            {
+                <li>@oficina.Key: @oficina.Value trámites</li>
+            }
+        }
+    </ul>
+</div>
+
+<div>
+    <h4>Gráfica de Trámites por Oficina</h4>
+    @if (BarChartConfig != null)
+    {
+        <Chart Config="BarChartConfig"></Chart>
+    }
+</div>
 
 <button class=" btn  btn-secondary btn-lg" @onclick="HomeRed">
     <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Volver
@@ -15,9 +51,30 @@
 
 @code {
     private LabContext? context;
+    private Dictionary<string, int>? tramitesPorOficina;
+    private BarConfig? BarChartConfig;
+    private HubConnection? _hubConnection;
+
+    
+    private bool isChartInitialized = false;  // Variable para verificar si el gráfico está inicializado
 
     protected override async Task OnInitializedAsync()
     {
+        // Cargar las estadísticas iniciales
+        await ActualizarEstadisticas();
+
+        // Conectar a SignalR
+        _hubConnection = new HubConnectionBuilder()
+            .WithUrl(NavigationManager.ToAbsoluteUri("/tramiteHub"))
+            .Build();
+
+        // Escuchar el evento para actualizar las estadísticas
+        _hubConnection.On("UpdateStatistics", async () =>
+        {
+            await ActualizarEstadisticas();
+            await InvokeAsync(StateHasChanged);  
+        });
+
         context = await DbFactory.CreateDbContextAsync();
         if (!UserSessionService.IsUserLoggedIn())
         {
@@ -46,7 +103,108 @@
             return;
         }
 
+        // Obtener la cantidad de trámites por oficina
+        tramitesPorOficina = await context.Tramite
+            .GroupBy(t => t.idOficina)
+            .Select(g => new
+            {
+                OficinaNombre = context.Oficina
+                    .Where(o => o.idOficina == g.Key)
+                    .Select(o => o.Nombre)
+                    .FirstOrDefault(),
+                Conteo = g.Count()
+            })
+            .ToDictionaryAsync(g => g.OficinaNombre ?? "Sin Nombre", g => g.Conteo);
 
+        // Configurar la gráfica
+        ConfigurarGrafica();
+
+        await _hubConnection.StartAsync();
+    }
+
+    private async Task ActualizarEstadisticas()
+    {
+        // Obtener la cantidad de trámites por oficina
+        using var context = await DbFactory.CreateDbContextAsync();
+        tramitesPorOficina = await context.Tramite
+            .GroupBy(t => t.idOficina)
+            .Select(g => new
+            {
+                OficinaNombre = context.Oficina
+                    .Where(o => o.idOficina == g.Key)
+                    .Select(o => o.Nombre)
+                    .FirstOrDefault(),
+                Conteo = g.Count()
+            })
+            .ToDictionaryAsync(g => g.OficinaNombre ?? "Sin Nombre", g => g.Conteo);
+
+        // Limpiar y actualizar la gráfica
+        if (BarChartConfig != null)
+        {
+            BarChartConfig.Data.Labels.Clear();
+            BarChartConfig.Data.Datasets.Clear();
+
+            foreach (var label in tramitesPorOficina.Keys)
+            {
+                BarChartConfig.Data.Labels.Add(label);
+            }
+
+            var barDataset = new BarDataset<int>(tramitesPorOficina.Values)
+                {
+                    Label = "Trámites por Oficina",
+                    BackgroundColor = tramitesPorOficina.Keys.Select(_ => "rgba(75, 192, 192, 0.2)").ToArray(),
+                    BorderColor = tramitesPorOficina.Keys.Select(_ => "rgba(75, 192, 192, 1)").ToArray(),
+                    BorderWidth = 1
+                };
+
+            BarChartConfig.Data.Datasets.Add(barDataset);
+            StateHasChanged();  
+        }
+    }
+
+    private void ConfigurarGrafica()
+    {
+        if (isChartInitialized) return;
+
+        BarChartConfig = new BarConfig
+            {
+                Options = new BarOptions
+                {
+                    Responsive = true,
+                    Legend = new Legend { Display = false },
+                    Scales = new BarScales
+                    {
+                        YAxes = new List<LinearCartesianAxis>
+                    {
+                        new LinearCartesianAxis
+                        {
+                            Ticks = new LinearCartesianTicks { BeginAtZero = true }
+                        }
+                    }.Cast<CartesianAxis>().ToList()
+                    }
+                }
+            };
+
+        // Limpiar las etiquetas y datasets antes de agregar nuevos
+        BarChartConfig.Data.Labels.Clear();
+        BarChartConfig.Data.Datasets.Clear();
+
+        foreach (var label in tramitesPorOficina.Keys)
+        {
+            BarChartConfig.Data.Labels.Add(label);
+        }
+
+        var barDataset = new BarDataset<int>(tramitesPorOficina.Values)
+            {
+                Label = "Trámites por Oficina",
+                BackgroundColor = tramitesPorOficina.Keys.Select(_ => "rgba(75, 192, 192, 0.2)").ToArray(),
+                BorderColor = tramitesPorOficina.Keys.Select(_ => "rgba(75, 192, 192, 1)").ToArray(),
+                BorderWidth = 1
+            };
+
+        BarChartConfig.Data.Datasets.Add(barDataset);
+
+        isChartInitialized = true;  // Marca que el gráfico ya ha sido inicializado
     }
 
     private void HomeRed()
@@ -73,6 +231,29 @@
                 Console.WriteLine($"Oficina seleccionada: {role}");
                 NavigationManager.NavigateTo("/");
                 break;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                await ActualizarEstadisticas();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al actualizar estadísticas: {ex.Message}");
+            }
+        }
+        else
+        {
+            // Llamada a la actualización solo si el gráfico ya ha sido inicializado
+            if (BarChartConfig != null)
+            {
+                await InvokeAsync(StateHasChanged);  // Forzar la actualización de la vista
+            }
         }
     }
 }

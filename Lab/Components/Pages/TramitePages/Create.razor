@@ -86,6 +86,10 @@
         // Notificar a los clientes conectados al monitor que hay un nuevo trámite
         await TramiteHubContext.Clients.All.SendAsync("ReceiveTramiteUpdate");
 
+        // Notificar a los clientes conectados a la página de estadísticas para que actualicen la gráfica
+        await TramiteHubContext.Clients.All.SendAsync("UpdateStatistics");
+
+
         NavigationManager.NavigateTo($"/tramites/create/{OficinaId}");
     }
 }
