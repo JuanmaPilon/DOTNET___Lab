@@ -2,31 +2,28 @@
 @inject UserSessionService UserSessionService
 @inject NavigationManager Navigation
 @using Lab.Components.Pages
-@using Lab.Components  
+@using Lab.Components
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+<div class="main-content">
+<div class="d-flex flex-column min-vh-100">
+    <NavMenu /> <!-- Menú de navegación (NavMenu.razor) -->
 
-    <main>
-        
-        <Header /> <!-- Incluye el componente de encabezado -->
-
+    <main class="flex-grow-1">
+        <Header /> <!-- Encabezado común -->
         <article class="content px-4">
-            @Body 
+            @Body <!-- Aquí se renderiza el contenido de cada página -->
         </article>
-       
     </main>
 
-    
+    <footer class="text-center py-1 bg-light text-muted small">
+        <p class="mb-0">© 2024 .NET</p>
+    </footer>
 </div>
-<footer class="text-center py-1 bg-light text-muted small">
-    <p class="mb-0">© 2024 .NET</p>
-</footer>
+</div>
 
 <div id="blazor-error-ui">
     An unhandled error has occurred.
     <a href="" class="reload">Reload</a>
     <a class="dismiss">🗙</a>
 </div>
+

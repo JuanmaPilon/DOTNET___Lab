@@ -1,67 +1,160 @@
 ﻿@inject NavigationManager NavigationManager
 @inject UserSessionService UserSessionService
 @rendermode InteractiveServer
+@inject IJSRuntime JSRuntime
 
-<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">Lab</a>
+<!-- Menú lateral (barra lateral) -->
+<div id="sidebar" class="sidebar">
+    <div class="sidebar-content">
+        <h5 class="sidebar-title">Oficina de Tramites</h5>
+        <nav>
+            <div class="nav-item">
+                <button class="nav-link btn btn-link" @onclick="NavigateToHome">Home</button>
+            </div>
+            <div class="nav-item">
+                <NavLink class="nav-link btn-link" href="/selectorOficina" @onclick="CloseSidebar">
+                    Nuevo Trámite
+                </NavLink>
+            </div>
+        </nav>
     </div>
 </div>
 
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
-
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="flex-column">
-        <div class="nav-item px-3">
-            <button class="nav-link btn btn-link" @onclick="HomeRed">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </button>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link btn btn-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link btn btn-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link btn-link" href="/selectorOficina">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Nuevo Trámite
-            </NavLink>
-        </div>
-    </nav>
+<!-- Botón de activación -->
+<div id="toggleButton" class="sidebar-toggle" @onclick="ToggleSidebar">
+    <span id="sidebarIcon" class="sidebar-icon">☰</span> <!-- Icono para el botón activador -->
 </div>
 
+
+<style>
+    /* Estilos para la barra lateral */
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 250px;
+        height: 100%;
+        background-color: #343a40;
+        color: white;
+        overflow-y: auto;
+        transition: transform 0.3s ease;
+        z-index: 1000;
+        transform: translateX(-100%); /* Oculta la barra lateral */
+    }
+
+        .sidebar.show {
+            transform: translateX(0); /* Muestra la barra lateral */
+        }
+
+    .sidebar-content {
+        padding: 20px;
+    }
+
+    .sidebar-title {
+        margin-bottom: 20px;
+    }
+
+    /* Botón de activación */
+    .sidebar-toggle {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 50px;
+        height: 100%;
+        background-color: #343a40;
+        color: white;
+        text-align: center;
+        cursor: pointer;
+        z-index: 1100; /* Asegura que el botón esté por encima del contenido */
+        transition: left 0.3s ease;
+    }
+
+        .sidebar-toggle.hide {
+            left: 250px; /* Mueve el botón con la barra lateral */
+        }
+
+    /* Icono del botón */
+    .sidebar-icon {
+        font-size: 30px;
+        color: white;
+    }
+
+    /* Contenido principal */
+    .main-content {
+        margin-left: 50px;
+        transition: margin-left 0.3s ease;
+    }
+
+        .main-content.shifted {
+            margin-left: 280px; /* Desplaza el contenido cuando el menú está visible */
+        }
+</style>
+
 @code {
+    private void NavigateToHome()
+    {
+        HomeRed();
+        CloseSidebar();
+    }
+
+    private void CloseSidebar()
+    {
+        // Cierra la barra lateral y cambia el icono a las tres líneas
+        JSRuntime.InvokeVoidAsync("eval", @"
+            var sidebar = document.getElementById('sidebar');
+            var button = document.getElementById('toggleButton');
+            var icon = document.getElementById('sidebarIcon');
+            var content = document.querySelector('.main-content');
+
+            sidebar.classList.remove('show');
+            button.classList.remove('hide');
+            content.classList.remove('shifted');
+
+            icon.textContent = '☰'; // Cambia el icono a las tres líneas
+        ");
+    }
+
+    private async Task ToggleSidebar()
+    {
+        // Alternar la visibilidad de la barra lateral y el contenido principal
+        await JSRuntime.InvokeVoidAsync("eval", @"
+            var sidebar = document.getElementById('sidebar');
+            var button = document.getElementById('toggleButton');
+            var icon = document.getElementById('sidebarIcon');
+            var content = document.querySelector('.main-content');
+
+            sidebar.classList.toggle('show');
+            button.classList.toggle('hide');
+            content.classList.toggle('shifted');
+
+            // Cambia el icono basado en el estado de la barra lateral
+            if (sidebar.classList.contains('show')) {
+                icon.textContent = '✖'; // Cambia el icono a una cruz
+            } else {
+                icon.textContent = '☰'; // Cambia el icono a las tres líneas
+            }
+        ");
+    }
+
     private void HomeRed()
     {
-        Console.WriteLine($"ENTRE");
         var (username, role) = UserSessionService.GetCurrentSession();
-        // Redirigir basado en el rol del usuario
         switch (role)
         {
             case "Administrador":
                 NavigationManager.NavigateTo("/admin");
-                Console.WriteLine($"Oficina seleccionada: {username}");
                 break;
             case "Operario":
                 NavigationManager.NavigateTo("/cubiculo");
-                Console.WriteLine($"Oficina seleccionada: {username}");
                 break;
             case "GerenteCalidad":
                 NavigationManager.NavigateTo("/gerente-calidad");
-                Console.WriteLine($"Oficina seleccionada: {username}");
                 break;
             default:
-                Console.WriteLine($"Oficina seleccionada: {username}");
-                Console.WriteLine($"Oficina seleccionada: {role}");
                 NavigationManager.NavigateTo("/");
                 break;
         }
     }
 }
+
+
