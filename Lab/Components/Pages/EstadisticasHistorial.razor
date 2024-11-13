@@ -21,6 +21,9 @@
 <br />
 <div>
     <!-- Filtros -->
+    <label for="nroTramite">Nro. de Trámite:</label>
+    <input type="text" id="nroTramite" @bind="nroTramite" class="form-control" />
+
     <label for="fechaInicio">Fecha de Inicio:</label>
     <input type="date" id="fechaInicio" @bind="fechaInicio" />
 
@@ -38,6 +41,7 @@
 
     <button @onclick="ActualizarFiltros">Actualizar Filtros</button>
 </div>
+
 <br/>
 <h3> Historial de Trámites </h3>
 <br/>
@@ -92,6 +96,8 @@ else
     private Chart _chart;
     private int? idOficinaSeleccionada;
     private List<Oficina> OficinasDisponibles = new List<Oficina>();
+    private string nroTramite = string.Empty;  // Para almacenar el valor de NroTramite
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -163,6 +169,16 @@ else
         var query = context.Tramite
             .Where(t => t.FechaFin.HasValue && t.FechaFin >= fechaInicio && t.FechaFin <= fechaFin);
 
+        // Filtrar por NroTramite si es proporcionado
+        if (!string.IsNullOrEmpty(nroTramite))
+        {
+            if (int.TryParse(nroTramite, out int nroTramiteInt))  // Asegúrate de que NroTramite es un número válido
+            {
+                query = query.Where(t => t.NroTramite == nroTramiteInt);
+            }
+        }
+
+        // Filtrar por oficina si se ha seleccionado
         if (idOficinaSeleccionada.HasValue)
         {
             query = query.Where(t => t.idOficina == idOficinaSeleccionada.Value);
@@ -170,6 +186,7 @@ else
 
         historial = await query.ToListAsync();
     }
+
 
     private async Task CargarDatosGrafico()
     {
@@ -241,7 +258,8 @@ else
 
     private async Task ActualizarFiltros()
     {
-        await CargarHistorialTramites();
-        await CargarDatosGrafico();
+        await CargarHistorialTramites();  // Actualiza los trámites con los filtros aplicados
+        await CargarDatosGrafico();  // Actualiza el gráfico si es necesario
     }
+
 }
