@@ -107,6 +107,29 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        if (!UserSessionService.IsUserLoggedIn())
+        {
+            NavigationManager.NavigateTo("/");
+            return;
+        }
+
+        // Verificar el rol del usuario
+        var (username, role) = UserSessionService.GetCurrentSession();
+
+        if (role != "Administrador" && role != "GerenteCalidad")
+        {
+            // Redirigir basado en el rol del usuario
+            switch (role)
+            {
+                case "Operario":
+                    NavigationManager.NavigateTo("/cubiculo");
+                    break;
+                default:
+                    NavigationManager.NavigateTo("/");
+                    break;
+            }
+            return;
+        }
         // Inicializar _config aquí
         _config = new LineConfig
             {

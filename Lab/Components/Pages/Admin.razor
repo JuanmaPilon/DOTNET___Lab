@@ -1,6 +1,7 @@
 ﻿@page "/admin"
 @using Lab.Components.Models
-@inject UserSessionService UserSessionService // Inyección del servicio de sesión
+@inject NavigationManager NavigationManager
+@inject UserSessionService UserSessionService
 @using Microsoft.EntityFrameworkCore
 @inject IDbContextFactory<Lab.Data.LabContext> DbFactory
 
@@ -52,6 +53,7 @@
 
     protected override void OnInitialized()
     {
+       
         // Obtener el nombre de usuario de la sesión actual
         var session = UserSessionService.GetCurrentSession(); // Sin necesidad de pasar el nombre de usuario
 
@@ -63,6 +65,32 @@
     protected override async Task OnInitializedAsync()
     {
         // Cargar las oficinas disponibles si es admin
+        if (!UserSessionService.IsUserLoggedIn())
+        {
+            NavigationManager.NavigateTo("/");
+            return;
+        }
+
+        // Verificar el rol del usuario
+        var (username, role) = UserSessionService.GetCurrentSession();
+
+        if (role != "Administrador")
+        {
+            // Redirigir basado en el rol del usuario
+            switch (role)
+            {
+                case "GerenteCalidad":
+                    NavigationManager.NavigateTo("/gerente-calidad");
+                    break;
+                case "Operario":
+                    NavigationManager.NavigateTo("/cubiculo");
+                    break;
+                default:
+                    NavigationManager.NavigateTo("/");
+                    break;
+            }
+            return;
+        }
         using var context = DbFactory.CreateDbContext();
         OficinasDisponibles = await context.Oficina.AsNoTracking().ToListAsync();
     }
