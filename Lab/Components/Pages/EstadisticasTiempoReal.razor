@@ -45,6 +45,17 @@
     }
 </div>
 
+<button class="btn btn-primary" @onclick="ToggleFiltroSinFechaFin">
+    @if (filtrarSinFechaFin)
+    {
+        <span>Mostrar Todos los Trámites</span>
+    }
+    else
+    {
+        <span>Mostrar Trámites en espera</span>
+    }
+</button>
+
 <button class=" btn  btn-secondary btn-lg" @onclick="HomeRed">
     <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Volver
 </button>
@@ -54,6 +65,7 @@
     private Dictionary<string, int>? tramitesPorOficina;
     private BarConfig? BarChartConfig;
     private HubConnection? _hubConnection;
+    private bool filtrarSinFechaFin = false;
 
     
     private bool isChartInitialized = false;  // Variable para verificar si el gráfico está inicializado
@@ -124,9 +136,17 @@
 
     private async Task ActualizarEstadisticas()
     {
-        // Obtener la cantidad de trámites por oficina
+        // Obtener la cantidad de trámites por oficina con el filtro opcional
         using var context = await DbFactory.CreateDbContextAsync();
-        tramitesPorOficina = await context.Tramite
+        var tramitesQuery = context.Tramite.AsQueryable();
+
+        if (filtrarSinFechaFin)
+        {
+            // Aplicar el filtro para trámites sin fecha fin
+            tramitesQuery = tramitesQuery.Where(t => t.FechaFin == null);
+        }
+
+        tramitesPorOficina = await tramitesQuery
             .GroupBy(t => t.idOficina)
             .Select(g => new
             {
@@ -158,8 +178,14 @@
                 };
 
             BarChartConfig.Data.Datasets.Add(barDataset);
-            StateHasChanged();  
+            StateHasChanged();
         }
+    }
+
+    private void ToggleFiltroSinFechaFin()
+    {
+        filtrarSinFechaFin = !filtrarSinFechaFin; // Alternar el filtro
+        ActualizarEstadisticas(); // Actualizar las estadísticas con el nuevo filtro
     }
 
     private void ConfigurarGrafica()
