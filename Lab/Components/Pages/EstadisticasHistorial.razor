@@ -2,6 +2,8 @@
 @using Lab.Components.Models
 @using Microsoft.EntityFrameworkCore
 @inject IDbContextFactory<Lab.Data.LabContext> DbFactory
+@inject NavigationManager NavigationManager
+@inject UserSessionService UserSessionService
 
 @using ChartJs.Blazor
 @using ChartJs.Blazor.PieChart
@@ -88,6 +90,10 @@ else
 
 <h3>Trámites por Fechas</h3>
 <Chart Config="_config"></Chart>
+
+<button class=" btn  btn-secondary btn-lg" @onclick="HomeRed">
+    <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Volver
+</button>
 @code {
     private List<Tramite> historial;
     private DateTime fechaInicio = DateTime.Now.AddMonths(-1);
@@ -154,7 +160,7 @@ else
             };
 
         await CargarOficinasDisponibles();
-        await ActualizarFiltros();  // Asegúrate de cargar datos después de inicializar
+        await ActualizarFiltros();  
     }
 
     private async Task CargarOficinasDisponibles()
@@ -262,4 +268,30 @@ else
         await CargarDatosGrafico();  // Actualiza el gráfico si es necesario
     }
 
+    private void HomeRed()
+    {
+        Console.WriteLine($"ENTRE");
+        var (username, role) = UserSessionService.GetCurrentSession();
+        // Redirigir basado en el rol del usuario
+        switch (role)
+        {
+            case "Administrador":
+                NavigationManager.NavigateTo("/admin");
+                Console.WriteLine($"Oficina seleccionada: {username}");
+                break;
+            case "Operario":
+                NavigationManager.NavigateTo("/cubiculo");
+                Console.WriteLine($"Oficina seleccionada: {username}");
+                break;
+            case "GerenteCalidad":
+                NavigationManager.NavigateTo("/gerente-calidad");
+                Console.WriteLine($"Oficina seleccionada: {username}");
+                break;
+            default:
+                Console.WriteLine($"Oficina seleccionada: {username}");
+                Console.WriteLine($"Oficina seleccionada: {role}");
+                NavigationManager.NavigateTo("/");
+                break;
+        }
+    }
 }
