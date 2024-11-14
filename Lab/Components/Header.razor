@@ -4,39 +4,60 @@
 
 @rendermode InteractiveServer
 
-<header class="top-row px-4" style="display: flex; justify-content: flex-end; align-items: center;">
-    <a href="https://learn.microsoft.com/aspnet/core/" target="_blank" style="margin-left: 20px;">About</a>
-    
-    @if (IsUserLoggedIn())
-    {
-        <button @onclick="Logout" style="margin-left: 10px;">Logout</button>
-    }
-    else
-    {
-        <button @onclick="Login" style="margin-left: 10px;">Login</button>
-    }
+<header class="top-row bg-body-tertiary border-bottom py-3" style="width: 100%;">
+    <div class="container-fluid d-flex justify-content-between align-items-center">
+        <nav aria-label="breadcrumb" style="--bs-breadcrumb-divider: '|';" class="w-100 d-flex justify-content-between">
+            <ol class="breadcrumb breadcrumb-custom overflow-hidden text-center bg-body-tertiary border rounded-3 mb-0 w-100 py-2"
+                style="border: 2px solid black; background: repeating-linear-gradient(45deg, #f0f0f0, #f0f0f0 10px, #dcdcdc 10px, #dcdcdc 20px);">
+
+                <li class="breadcrumb-item d-flex align-items-center">
+                    
+                    <a class="link-body-emphasis fw-semibold text-decoration-none" href="/">
+                        <i class="bi bi-house-fill text-dark ms-3"></i>
+                    </a>
+                </li>
+                <div class="ms-auto d-flex">
+                    <li class="breadcrumb-item">
+                    <button class="btn btn-outline-dark ms-3" onclick="window.open('https://learn.microsoft.com/aspnet/core/', '_blank')">About</button>
+
+                    </li>
+                    <li class="breadcrumb-item active" aria-current="page">
+                        @if (IsUserLoggedIn())
+                        {
+                        <button @onclick="Logout" class=" btn-outline-dark btn  ms-2 me-2">Logout</button>
+                        }
+                        else
+                        {
+                        <button @onclick="Login" class="btn btn-outline-dark ms-2 me-2">Login</button>
+                        }
+                    </li>
+                </div>
+            </ol>
+        </nav>
+    </div>
 </header>
 
 @code {
     private void Logout()
     {
-
         Console.WriteLine("Logout button clicked!");
         UserSessionService.RemoveUserSession(); // Sin argumentos
         Console.WriteLine("User session removed.");
         Navigation.NavigateTo("/"); // Redirige a la página de inicio
     }
+
     private void Login()
     {
-
-        Console.WriteLine("Login button clicked!");       
+        Console.WriteLine("Login button clicked!");
         Navigation.NavigateTo("/"); // Redirige a la página de inicio
     }
+
     private bool IsUserLoggedIn()
     {
         var currentSession = UserSessionService.GetCurrentSession();
         return !string.IsNullOrEmpty(currentSession.username);
     }
+
     public void ReloadPage()
     {
         Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
