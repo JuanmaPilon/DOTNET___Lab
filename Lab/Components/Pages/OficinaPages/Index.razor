@@ -14,7 +14,7 @@
 <h1>Index</h1>
 
 <p>
-    <a href="oficinas/create">Create New</a>
+    <a class=" btn  btn-secondary btn-lg" href="oficinas/create">Create New</a>
 </p>
 
 <QuickGrid Class="table" Items="context.Oficina">
@@ -22,8 +22,7 @@
     <PropertyColumn Property="Oficina => Oficina.Nombre " Title="Nombre de oficina" />
     <PropertyColumn Property="Oficina => Oficina.Ubicacion " Title="Ubicacion de oficina" />
     <TemplateColumn Context="oficina">
-        <a href="@($"oficinas/edit?idoficina={oficina.idOficina}")">Edit</a> |
-        <a href="@($"oficinas/details?idoficina={oficina.idOficina}")">Details</a> |
+        <a href="@($"oficinas/edit?idoficina={oficina.idOficina}")">Edit</a> |        
         <a href="@($"oficinas/delete?idoficina={oficina.idOficina}")">Delete</a>
     </TemplateColumn>
 </QuickGrid>

@@ -28,14 +28,14 @@ else
                     <InputText id="password" @bind-Value="Administrador.Password" class="form-control" />
                     <ValidationMessage For="() => Administrador.Password" class="text-danger" />
                 </div>
-                <button type="submit" class="btn btn-primary">Save</button>
+                <button type="submit" class=" btn  btn-secondary btn-lg">Save</button>
             </EditForm>
         </div>
     </div>
 }
-
+<br/>
 <div>
-    <a href="/administradors">Back to List</a>
+    <a class=" btn  btn-secondary btn-lg" href="/administradors">Back to List</a>
 </div>
 
 @code {

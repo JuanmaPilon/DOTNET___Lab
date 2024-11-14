@@ -37,14 +37,14 @@ else
                     <InputText id="password" @bind-Value="Operario.Password" class="form-control" />
                     <ValidationMessage For="() => Operario.Password" class="text-danger" />
                 </div>
-                <button type="submit" class="btn btn-primary">Save</button>
+                <button type="submit" class=" btn  btn-secondary btn-lg">Save</button>
             </EditForm>
         </div>
     </div>
 }
-
+<br/>
 <div>
-    <a href="/operarios">Back to List</a>
+    <a class=" btn  btn-secondary btn-lg" href="/operarios">Back to List</a>
 </div>
 
 @code {

@@ -23,8 +23,8 @@
             <dd class="col-sm-10">@gerentecalidad.Password</dd>
         </dl>
         <EditForm method="post" Model="gerentecalidad" OnValidSubmit="DeleteGerenteCalidad" FormName="delete" Enhance>
-            <button type="submit" class="btn btn-danger" disabled="@(gerentecalidad is null)">Delete</button> |
-            <a href="/gerentecalidads">Back to List</a>
+            <button type="submit" class="btn btn-danger btn-lg" disabled="@(gerentecalidad is null)">Delete</button> |
+            <a class=" btn  btn-secondary btn-lg" href="/gerentecalidads">Back to List</a>
         </EditForm>
     }
 </div>

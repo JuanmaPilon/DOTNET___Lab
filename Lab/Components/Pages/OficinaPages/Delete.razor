@@ -19,8 +19,8 @@
     }
     else {
         <EditForm method="post" Model="oficina" OnValidSubmit="DeleteOficina" FormName="delete" Enhance>
-            <button type="submit" class="btn btn-danger" disabled="@(oficina is null)">Delete</button> |
-            <a href="/oficinas">Back to List</a>
+            <button type="submit" class="btn btn-danger btn-lg" disabled="@(oficina is null)">Delete</button> |
+            <a class=" btn  btn-secondary btn-lg" href="/oficinas">Back to List</a>
         </EditForm>
     }
 </div>
