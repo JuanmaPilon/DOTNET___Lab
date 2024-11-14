@@ -10,9 +10,8 @@
             <ol class="breadcrumb breadcrumb-custom overflow-hidden text-center bg-body-tertiary border rounded-3 mb-0 w-100 py-2"
                 style="border: 2px solid black; background: repeating-linear-gradient(45deg, #f0f0f0, #f0f0f0 10px, #dcdcdc 10px, #dcdcdc 20px);">
 
-                <li class="breadcrumb-item d-flex align-items-center">
-                    
-                    <a class="link-body-emphasis fw-semibold text-decoration-none" href="/">
+                <li class="breadcrumb-item d-flex align-items-center">           
+                    <a class="link-body-emphasis fw-semibold text-decoration-none" href="javascript:void(0);" @onclick="HomeRed">
                         <i class="bi bi-house-fill text-dark ms-3"></i>
                     </a>
                 </li>
@@ -61,5 +60,24 @@
     public void ReloadPage()
     {
         Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
+    }
+    private void HomeRed()
+    {
+        var (username, role) = UserSessionService.GetCurrentSession();
+        switch (role)
+        {
+            case "Administrador":
+                Navigation.NavigateTo("/admin");
+                break;
+            case "Operario":
+                Navigation.NavigateTo("/cubiculo");
+                break;
+            case "GerenteCalidad":
+                Navigation.NavigateTo("/gerente-calidad");
+                break;
+            default:
+                Navigation.NavigateTo("/");
+                break;
+        }
     }
 }
