@@ -35,14 +35,21 @@
 <button class="btn btn-secondary btn-lg" type="button" aria-expanded="false" @onclick="ShowOficinas">
     Mostrar Oficinas
 </button>
-
+<p> </p>
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-warning" role="alert">
+        @errorMessage
+    </div>
+}
 @if (OficinasDisponibles.Any())
 {
     <h4>Oficinas disponibles en @Oficina.Ubicacion:</h4>
     <ul>
         @foreach (var oficina in OficinasDisponibles)
         {
-            <button class="btn btn-primary" @onclick="() => NavigateToCreateTramite(oficina.idOficina)">
+            <p> </p>
+            <button class="btn btn-secondary btn-lg" @onclick="() => NavigateToCreateTramite(oficina.idOficina)">
                 @oficina.Nombre
             </button>
         }
@@ -52,11 +59,18 @@
 @code {
     private List<Oficina> OficinasDisponibles = new();
     private Oficina Oficina { get; set; } = new();
+    private string? errorMessage;
 
     private async Task OnOficinaChange(ChangeEventArgs e)
     {
+        errorMessage = null;
         Oficina.Ubicacion = e.Value?.ToString(); // Asigna la ubicación seleccionada
         await LoadOficinasByUbicacion(Oficina.Ubicacion); // Carga las oficinas disponibles
+        if (OficinasDisponibles == null || OficinasDisponibles.Count == 0)
+        {
+            errorMessage = "No se encontraron oficinas en esta ubicación.";
+        }
+        StateHasChanged();
     }
 
     private async Task LoadOficinasByUbicacion(string ubicacion)
@@ -70,9 +84,8 @@
     }
 
     private async Task ShowOficinas()
-    {
-        // Este método se llama al presionar el botón "Mostrar Oficinas"
-        await LoadOficinasByUbicacion(Oficina.Ubicacion);
+    {    
+            await LoadOficinasByUbicacion(Oficina.Ubicacion);         
     }
     private void NavigateToCreateTramite(int idOficina)
     {

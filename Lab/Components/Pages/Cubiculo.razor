@@ -12,37 +12,44 @@
 @implements IAsyncDisposable
 @inject IJSRuntime JSRuntime
 
-<h3>Cubiculo</h3>
+<div class="d-flex justify-content-center" style="margin-top: 5vh;">
+    <div class="card shadow" style="max-width: 1200px; background-color: #f8f9fa; width: 100%; padding: 2rem;">
+        <h3 class="text-center" style="font-size: 100px">Cubiculo</h3>
 
-<div>
-    @if (isPageInitialized)
-    {
-        @if (tramiteActual != null)
-        {
-            <div>
-                <p>Username: @username</p>
-                <p>Role: @role</p>
-            </div>
-            <div>
-                <p>Trámite actual: @tramiteActual.NroTramite</p>
-                <p>Fecha de inicio: @tramiteActual.FechaInicio.ToString("dd/MM/yyyy")</p>
-            </div>
-            <button class="btn btn-success" @onclick="TerminarTramite">Terminar Trámite</button>
-            <button class="btn btn-primary" @onclick="SiguienteTramite" disabled="@(esTramiteActivo)">Siguiente Trámite</button>
-            <button class="btn btn-warning" @onclick="LlamarDeNuevo">Llamar de nuevo</button>
-        }
-        else
-        {
-            <p>No hay trámite asignado actualmente.</p>
-            <button class="btn btn-primary" @onclick="SiguienteTramite" disabled="@(esTramiteActivo)">Siguiente Trámite</button>
-        }
-    }
-    else
-    {
-        <p>Cargando...</p>
-    }
+        <div class="d-flex flex-column align-items-center">
+            @if (isPageInitialized)
+            {
+                @if (tramiteActual != null)
+                {
+                    <div class="text-center">
+                        <p>Username: @username</p>
+                        <p>Role: @role</p>
+                    </div>
+                    <div class="text-center">
+                        <p>Trámite actual: @tramiteActual.NroTramite</p>
+                        <p>Fecha de inicio: @tramiteActual.FechaInicio.ToString("dd/MM/yyyy")</p>
+                    </div>
+                    <div class="d-flex justify-content-center gap-2">
+                        <button class="btn btn-success btn-lg w-40" @onclick="TerminarTramite">Terminar Trámite</button>
+                        <button class="btn btn-primary btn-lg w-40" @onclick="SiguienteTramite" disabled="@(esTramiteActivo)">Siguiente Trámite</button>
+                        <button class="btn btn-warning btn-lg w-40" @onclick="LlamarDeNuevo">Llamar de nuevo</button>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center">
+                        <p>No hay trámite asignado actualmente.</p>
+                        <button class="btn btn-secondary btn-lg w-100" @onclick="SiguienteTramite" disabled="@(esTramiteActivo)">Siguiente Trámite</button>
+                    </div>
+                }
+            }
+            else
+            {
+                <p>Cargando...</p>
+            }
+        </div>
+    </div>
 </div>
-
 @code {
     private HubConnection hubConnection;
     private string username;

@@ -8,34 +8,32 @@
 @inject IHubContext<Lab.Components.Hubs.TramiteHub> TramiteHubContext
 @inject IJSRuntime JS
 
+
 <PageTitle>Create</PageTitle>
+<div class="d-flex justify-content-center" style="margin-top: 10vh;">
+    <div class="card shadow" style="max-width: 1200px; background-color: #f8f9fa; width: 100%; padding: 2rem;">
+        <h1 class="text-center" style="font-size: 100px;">Ingrese la cedula</h1>
+        <h2 class="text-center text-muted">Para iniciar su nuevo tramite</h2>
+        <hr />
 
-<h1>Create</h1>
-
-<h2>Tramite</h2>
-<hr />
-<div class="row">
-    <div class="col-md-4">
         <EditForm method="post" Model="Tramite" OnValidSubmit="AddTramite" FormName="create" Enhance>
             <DataAnnotationsValidator />
             <ValidationSummary class="text-danger" />
+
             <div class="mb-3">
-                <label for="cedulacliente" class="form-label">CedulaCliente:</label>
                 <InputNumber id="cedulacliente" @bind-Value="Tramite.CedulaCliente" class="form-control" />
                 <ValidationMessage For="() => Tramite.CedulaCliente" class="text-danger" />
             </div>
-            <button type="submit" class="btn btn-primary">Create</button>
+
+            <button type="submit" class="btn btn-secondary btn-lg w-100">Create</button>
         </EditForm>
 
         @if (ErrorMessage != null)
         {
-            <div class="alert alert-danger">@ErrorMessage</div>
+            <div class="alert alert-danger mt-3">@ErrorMessage</div>
         }
+        
     </div>
-</div>
-
-<div>
-    <a href="/tramites">Back to List</a>
 </div>
 
 @code {
@@ -92,4 +90,5 @@
 
         NavigationManager.NavigateTo($"/tramites/create/{OficinaId}");
     }
+    
 }

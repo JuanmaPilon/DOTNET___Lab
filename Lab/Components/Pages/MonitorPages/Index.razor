@@ -12,6 +12,13 @@
 
 <h1>Monitor - Oficina @OficinaId </h1>
 
+@if (tramiteResaltadoId.HasValue)
+{
+    <div class="alert alert-warning text-center" style="font-size: 40px; margin-bottom: 30px;">
+        <strong>Turno del cliente con el tramite:</strong> Nro Trámite: @tramiteResaltadoId 
+    </div>
+}
+
 @if (TramitesActivos != null && TramitesActivos.Count > 0)
 {
     <table class="table">
@@ -19,7 +26,7 @@
             <tr>
                 <th>Nro Trámite</th>
                 <th>Cédula Cliente</th>
-                <th>Nro Puesto</th>                             
+                <th>Nro Puesto</th>
             </tr>
         </thead>
         <tbody>
@@ -28,7 +35,7 @@
                 <tr class="@(tramiteResaltadoId == tramite.NroTramite ? "table-warning" : "")">
                     <td>@tramite.NroTramite</td>
                     <td>@tramite.CedulaCliente</td>
-                    <td>@tramite.NroPuesto</td>                                       
+                    <td>@tramite.NroPuesto</td>
                 </tr>
             }
         </tbody>
@@ -44,7 +51,7 @@ else
 
     private List<Tramite> TramitesActivos { get; set; } = new();
     private HubConnection hubConnection;
-    private int? tramiteResaltadoId; // ID del trámite a resaltar
+    private int? tramiteResaltadoId; 
 
     protected override async Task OnInitializedAsync()
     {
@@ -58,15 +65,16 @@ else
         // Escuchar el evento "ReceiveTramiteUpdate" para recargar trámites activos
         hubConnection.On("ReceiveTramiteUpdate", async () =>
         {
-            await LoadTramites();  // Recargar trámites
-            await InvokeAsync(StateHasChanged); // Asegurar actualización de la UI en el Dispatcher
+            await LoadTramites();  
+            tramiteResaltadoId = null;
+            await InvokeAsync(StateHasChanged); 
         });
 
         // Escuchar el evento "ReceiveLlamarDeNuevo" para resaltar un trámite específico
         hubConnection.On<int>("ReceiveLlamarDeNuevo", (nroTramite) =>
         {
             tramiteResaltadoId = nroTramite;  // Asignar el ID del trámite a resaltar
-            InvokeAsync(StateHasChanged); // Usar InvokeAsync para actualizar la UI en el hilo correcto
+            InvokeAsync(StateHasChanged); 
         });
 
         await hubConnection.StartAsync();
