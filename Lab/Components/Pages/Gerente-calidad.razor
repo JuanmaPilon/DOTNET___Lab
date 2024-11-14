@@ -4,19 +4,23 @@
 @inject UserSessionService UserSessionService
 @rendermode InteractiveServer
 
-<h3>Bienvenido, Gerente</h3>
+<div class="d-flex justify-content-center" style="margin-top: 5vh;">
+    <div class="card shadow" style="max-width: 1200px; background-color: #f8f9fa; width: 100%; padding: 2rem;">
+        <h3 class="text-center" style="font-size: 100px">Bienvenido, Gerente</h3>
 
-<p>Esta es la página de los gerentes.</p>
+        <p class="text-center">Username: @username</p>
+        <p class="text-center">Role: @role</p>
 
-<p>Username: @username</p>
-<p>Role: @role</p>
-<NavLink class="btn btn-secondary btn-lg" href="/EstadisticasTiempoReal">
-    Datos en tiempo real
-</NavLink>
-<NavLink class="btn btn-secondary btn-lg" href="/EstadisticasHistorial">
-    Historial de tramites
-</NavLink>
-
+        <div class="d-flex justify-content-center">
+            <NavLink class="btn btn-secondary btn-lg mx-2" href="/EstadisticasTiempoReal">
+                Datos en tiempo real
+            </NavLink>
+            <NavLink class="btn btn-secondary btn-lg mx-2" href="/EstadisticasHistorial">
+                Historial de tramites
+            </NavLink>
+        </div>
+    </div>
+</div>
 @code {
     private string username;
     private string role;

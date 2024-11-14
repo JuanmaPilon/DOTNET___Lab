@@ -25,13 +25,13 @@
     <!-- Filtros -->
     <label for="nroTramite">Nro. de Trámite:</label>
     <input type="text" id="nroTramite" @bind="nroTramite" class="form-control" />
-
+    <br />
     <label for="fechaInicio">Fecha de Inicio:</label>
     <input type="date" id="fechaInicio" @bind="fechaInicio" />
-
+    
     <label for="fechaFin">Fecha de Fin:</label>
     <input type="date" id="fechaFin" @bind="fechaFin" />
-
+    <br />
     <label for="oficina">Oficina:</label>
     <select id="oficina" class="form-select" @onchange="OnOficinaChange">
         <option value="">Selecciona una oficina</option>
@@ -40,8 +40,8 @@
             <option value="@oficina.idOficina">@oficina.Nombre</option>
         }
     </select>
-
-    <button @onclick="ActualizarFiltros">Actualizar Filtros</button>
+    <br />
+    <button class="btn btn-secondary btn-lg w-100" @onclick="ActualizarFiltros">Actualizar Filtros</button>
 </div>
 
 <br/>
